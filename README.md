@@ -1,42 +1,10 @@
 ![Logo](admin/oasecontrol.png)
 # ioBroker.oasecontrol
-
-[![NPM version](https://img.shields.io/npm/v/iobroker.oasecontrol.svg)](https://www.npmjs.com/package/iobroker.oasecontrol)
-[![Downloads](https://img.shields.io/npm/dm/iobroker.oasecontrol.svg)](https://www.npmjs.com/package/iobroker.oasecontrol)
-![Number of Installations](https://iobroker.live/badges/oasecontrol-installed.svg)
-![Current version in stable repository](https://iobroker.live/badges/oasecontrol-stable.svg)
-
-[![NPM](https://nodei.co/npm/iobroker.oasecontrol.png?downloads=true)](https://nodei.co/npm/iobroker.oasecontrol/)
-
 **Tests:** ![Test and Release](https://github.com/mr-suw/ioBroker.oasecontrol/workflows/Test%20and%20Release/badge.svg)
 
 ## oasecontrol adapter for ioBroker
 
-Controls outdoor devices from OASE.
-
-### Getting started
-
-You are almost done, only a few steps left:
-1. Create a new repository on GitHub with the name `ioBroker.oasecontrol`
-1. Initialize the current folder as a new git repository:  
-    ```bash
-    git init -b main
-    git add .
-    git commit -m "Initial commit"
-    ```
-1. Link your local repository with the one on GitHub:  
-    ```bash
-    git remote add origin https://github.com/mr-suw/ioBroker.oasecontrol
-    ```
-
-1. Push all files to the GitHub repo:  
-    ```bash
-    git push origin main
-    ```
-1. Add a new secret under https://github.com/mr-suw/ioBroker.oasecontrol/settings/secrets. It must be named `AUTO_MERGE_TOKEN` and contain a personal access token with push access to the repository, e.g. yours. You can create a new token under https://github.com/settings/tokens.
-
-1. Head over to [main.js](main.js) and start programming!
-
+Controls outdoor devices from OASE. Supported devices are the FM-Master EGC series. Tested with FM-Master EGC Home.
 ### Best Practices
 We've collected some [best practices](https://github.com/ioBroker/ioBroker.repositories#development-and-coding-best-practices) regarding ioBroker development and coding in general. If you're new to ioBroker or Node.js, you should
 check them out. If you're already experienced, you should also take a look at them - you might learn something new :)
@@ -85,7 +53,9 @@ Since you set up `dev-server`, you can use it to run, test and debug your adapte
 
 You may start `dev-server` by calling from your dev directory:
 ```bash
-dev-server watch
+dev-server watch default
+dev-server run default
+dev-server debug default
 ```
 
 The ioBroker.admin interface will then be available at http://localhost:8081/
