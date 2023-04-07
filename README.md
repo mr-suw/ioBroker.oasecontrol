@@ -74,9 +74,8 @@ Please refer to the [`dev-server` documentation](https://github.com/ioBroker/dev
     Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**
 -->
-
-### **WORK IN PROGRESS**
-* (mrsuw) initial release
+* v0.0.2 adapter compliance
+* v0.0.1 communication with OASE device working
 
 ## License
 MIT License

@@ -1,84 +1,97 @@
 {
-    "common": {
-        "name": "oasecontrol",
-        "version": "0.0.1",
-        "news": {
-            "0.0.1": {
-                "en": "initial release",
-                "de": "Erstveröffentlichung",
-                "ru": "Начальная версия",
-                "pt": "lançamento inicial",
-                "nl": "Eerste uitgave",
-                "fr": "Première version",
-                "it": "Versione iniziale",
-                "es": "Versión inicial",
-                "pl": "Pierwsze wydanie",
-                "zh-cn": "首次出版"
-            }
-        },
-        "titleLang": {
-            "en": "OASE Control",
-            "de": "OASE-Steuerung",
-            "ru": "Управление ОАСЭ",
-            "pt": "Controle OASE",
-            "nl": "OASE-besturing",
-            "fr": "Contrôle OASE",
-            "it": "Controllo dell'Oasi",
-            "es": "Control OASE",
-            "pl": "Kontrola OASE",
-            "zh-cn": "绿洲控制"
-        },
-        "desc": {
-            "en": "Controls outdoor devices from OASE",
-            "de": "Steuert Outdoor-Geräte von OASE",
-            "ru": "Управляет уличными устройствами от OASE",
-            "pt": "Controla dispositivos externos do OASE",
-            "nl": "Stuurt buitenapparaten van OASE aan",
-            "fr": "Contrôle les appareils extérieurs d'OASE",
-            "it": "Controlla i dispositivi esterni di OASE",
-            "es": "Controla dispositivos de exterior de OASE",
-            "pl": "Steruje urządzeniami zewnętrznymi firmy OASE",
-            "zh-cn": "控制 OASE 的户外设备"
-        },
-        "authors": [
-            "mrsuw <mrsuw@icloud.com>"
-        ],
-        "keywords": [
-            "garden",
-            "OASE",
-            "udp"
-        ],
-        "license": "MIT",
-        "platform": "Javascript/Node.js",
-        "main": "main.js",
-        "icon": "oasecontrol.png",
-        "enabled": true,
-        "extIcon": "https://raw.githubusercontent.com/mr-suw/ioBroker.oasecontrol/main/admin/oasecontrol.png",
-        "readme": "https://github.com/mr-suw/ioBroker.oasecontrol/blob/main/README.md",
-        "loglevel": "info",
-        "mode": "daemon",
-        "type": "garden",
-        "compact": true,
-        "connectionType": "local",
-        "dataSource": "poll",
-        "adminUI": {
-            "config": "json"
-        },
-        "dependencies": [
-            {
-                "js-controller": ">=3.3.22"
-            }
-        ],
-        "globalDependencies": [
-            {
-                "admin": ">=5.1.13"
-            }
-        ]
+  "common": {
+    "name": "oasecontrol",
+    "version": "0.0.2",
+    "news": {
+      "0.0.2": {
+        "en": "adapter compliance",
+        "de": "adapter compliance",
+        "ru": "соответствие адаптера",
+        "pt": "adapter compliance",
+        "nl": "adapter-conformiteit",
+        "fr": "conformité de l'adaptateur",
+        "it": "conformità dell'adattatore",
+        "es": "liberación inicial",
+        "pl": "adapter compliance",
+        "uk": "adapter compliance",
+        "zh-cn": "适配器合规性"
+      },
+      "0.0.1": {
+        "en": "initial release",
+        "de": "Erstveröffentlichung",
+        "ru": "Начальная версия",
+        "pt": "lançamento inicial",
+        "nl": "Eerste uitgave",
+        "fr": "Première version",
+        "it": "Versione iniziale",
+        "es": "Versión inicial",
+        "pl": "Pierwsze wydanie",
+        "zh-cn": "首次出版"
+      }
     },
-    "native": {
-        "optIp": "",
-        "optPollTime": 60
+    "titleLang": {
+      "en": "OASE Control",
+      "de": "OASE-Steuerung",
+      "ru": "Управление ОАСЭ",
+      "pt": "Controle OASE",
+      "nl": "OASE-besturing",
+      "fr": "Contrôle OASE",
+      "it": "Controllo dell'Oasi",
+      "es": "Control OASE",
+      "pl": "Kontrola OASE",
+      "zh-cn": "绿洲控制"
     },
-    "objects": [],
-    "instanceObjects": []
+    "desc": {
+      "en": "Controls outdoor devices from OASE",
+      "de": "Steuert Outdoor-Geräte von OASE",
+      "ru": "Управляет уличными устройствами от OASE",
+      "pt": "Controla dispositivos externos do OASE",
+      "nl": "Stuurt buitenapparaten van OASE aan",
+      "fr": "Contrôle les appareils extérieurs d'OASE",
+      "it": "Controlla i dispositivi esterni di OASE",
+      "es": "Controla dispositivos de exterior de OASE",
+      "pl": "Steruje urządzeniami zewnętrznymi firmy OASE",
+      "zh-cn": "控制 OASE 的户外设备"
+    },
+    "authors": [
+      "mrsuw <mrsuw@icloud.com>"
+    ],
+    "keywords": [
+      "garden",
+      "OASE",
+      "udp"
+    ],
+    "license": "MIT",
+    "platform": "Javascript/Node.js",
+    "main": "main.js",
+    "icon": "oasecontrol.png",
+    "enabled": true,
+    "extIcon": "https://raw.githubusercontent.com/mr-suw/ioBroker.oasecontrol/main/admin/oasecontrol.png",
+    "readme": "https://github.com/mr-suw/ioBroker.oasecontrol/blob/main/README.md",
+    "loglevel": "info",
+    "mode": "daemon",
+    "type": "garden",
+    "compact": true,
+    "connectionType": "local",
+    "dataSource": "poll",
+    "adminUI": {
+      "config": "json"
+    },
+    "dependencies": [
+      {
+        "js-controller": ">=3.3.22"
+      }
+    ],
+    "globalDependencies": [
+      {
+        "admin": ">=5.1.13"
+      }
+    ]
+  },
+  "native": {
+    "optIp": "",
+    "optPollTime": 60
+  },
+  "objects": [],
+  "instanceObjects": []
 }
