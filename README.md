@@ -1,4 +1,3 @@
-![Logo](admin/oasecontrol.png)
 # ioBroker.oasecontrol
 **Tests:** ![Test and Release](https://github.com/mr-suw/ioBroker.oasecontrol/workflows/Test%20and%20Release/badge.svg)
 
