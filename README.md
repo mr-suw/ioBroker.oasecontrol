@@ -3,7 +3,15 @@
 
 ## oasecontrol adapter for ioBroker
 
-Controls outdoor devices from OASE. Supported devices are the FM-Master EGC series. Tested with FM-Master EGC Home.
+ioBroker.oasecontrol controls outdoor devices from OASE. 
+Supported devices are the FM-Master EGC series. 
+
+Current devices under test:
+- FM-Master EGC Home with 4 power outlets
+
+Current supported features:
+- switchable power outlets
+- dimmable power outlet
 ### Best Practices
 We've collected some [best practices](https://github.com/ioBroker/ioBroker.repositories#development-and-coding-best-practices) regarding ioBroker development and coding in general. If you're new to ioBroker or Node.js, you should
 check them out. If you're already experienced, you should also take a look at them - you might learn something new :)
