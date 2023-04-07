@@ -16,7 +16,6 @@
                 "zh-cn": "首次出版"
             }
         },
-        "title": "OASE Control",
         "titleLang": {
             "en": "OASE Control",
             "de": "OASE-Steuerung",
@@ -45,10 +44,9 @@
             "mrsuw <mrsuw@icloud.com>"
         ],
         "keywords": [
-            "ioBroker",
-            "template",
-            "Smart Home",
-            "home automation"
+            "garden",
+            "OASE",
+            "udp"
         ],
         "license": "MIT",
         "platform": "Javascript/Node.js",
