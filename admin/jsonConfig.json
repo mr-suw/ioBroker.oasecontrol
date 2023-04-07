@@ -1,0 +1,16 @@
+{
+    "i18n": true,
+    "type": "panel",
+    "items": {
+        "optIp": {
+            "type": "text",
+            "label": "IP",
+            "newLine": true
+        },
+        "optPollTime": {
+            "type": "number",
+            "label": "Polling [s]",
+            "newLine": true
+        }
+    }
+}
