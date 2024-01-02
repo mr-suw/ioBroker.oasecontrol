@@ -73,9 +73,8 @@ Please refer to the [`dev-server` documentation](https://github.com/ioBroker/dev
 ## Changelog
 <!--
     Placeholder for the next version (at the beginning of the line):
-    ### **WORK IN PROGRESS**
+    ### v0.0.3 add feature read only outlets
 -->
-
 * v0.0.3 add feature read only outlets
 * v0.0.2 adapter compliance
 * v0.0.1 communication with OASE device working
