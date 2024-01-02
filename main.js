@@ -222,6 +222,21 @@ class Oasecontrol extends utils.Adapter {
             this.subscribeStatesAsync("outlet3");
             this.subscribeStatesAsync("outlet4");
             this.subscribeStatesAsync("outlet4_dimmer");
+
+            await this.createObj("outlet1_readOnly", "outlet1_readOnly", "state", "switch", "boolean", true, true);
+            await this.createObj("outlet2_readOnly", "outlet2_readOnly", "state", "switch", "boolean", true, true);
+            await this.createObj("outlet3_readOnly", "outlet3_readOnly", "state", "switch", "boolean", true, true);
+            await this.createObj("outlet4_readOnly", "outlet4_readOnly", "state", "switch", "boolean", true, true);
+
+            const roValOutlet1 =  await this.getStateAsync("oasecontrol.0.outlet1_readOnly");
+            const roValOutlet2 =  await this.getStateAsync("oasecontrol.0.outlet2_readOnly");
+            const roValOutlet3 =  await this.getStateAsync("oasecontrol.0.outlet3_readOnly");
+            const roValOutlet4 =  await this.getStateAsync("oasecontrol.0.outlet4_readOnly");
+            if ( roValOutlet1 == null ) {  this.setStateAsync("oasecontrol.0.outlet1_readOnly", false ); }
+            if ( roValOutlet2 == null ) {  this.setStateAsync("oasecontrol.0.outlet2_readOnly", false ); }
+            if ( roValOutlet3 == null ) {  this.setStateAsync("oasecontrol.0.outlet3_readOnly", false ); }
+            if ( roValOutlet4 == null ) {  this.setStateAsync("oasecontrol.0.outlet4_readOnly", false ); }
+
             this.isSubscDone = true;
             this.log.debug("adapter objects created.");
         }
@@ -418,7 +433,7 @@ class Oasecontrol extends utils.Adapter {
      * @param {string} id
      * @param {ioBroker.State | null | undefined} state
      */
-    onStateChange(id, state) {
+    async onStateChange(id, state) {
         if (state && state.ack == false) {
             // The state was changed
             this.log.debug(`state ${id} changed: ${state.val} (ack = ${state.ack})`);
@@ -426,47 +441,63 @@ class Oasecontrol extends utils.Adapter {
             //preperations
             this.setTxLock( true );
 
-            //setup cmd
+            //find out which outlet
             const idSplitted = id.split(".");
             const idName = idSplitted[ idSplitted.length - 1 ];
-            switch ( idName ){
-                case "outlet1" : this.cmdReq.itemId = 0x00; break;
-                case "outlet2" : this.cmdReq.itemId = 0x01; break;
-                case "outlet3" : this.cmdReq.itemId = 0x02; break;
-                case "outlet4" : this.cmdReq.itemId = 0x03; break;
-                case "outlet4_dimmer" : this.cmdReq.itemId = 0x04; break;
-                default : this.cmdReq.itemId = 0xff;
-            }
-            switch ( state.val ){
-                case false : this.cmdReq.value = 0x00; break;
-                case true : this.cmdReq.value = 0xff; break;
-                default : this.cmdReq.value = Number(state.val);
-            }
-            if ( ( this.cmdReq.itemId != 0xff ) && ( this.cmdReq.value <= 0xff ) && ( this.cmdReq.value >= 0x00) ){
-                //process cmd
-                this.reqOutletSwitch( this.cmdReq.itemId, this.cmdReq.value )
-                    .then( () => {
-                        this.log.debug("command for outlet (" + this.cmdReq.itemId + ") has been requested to switch to value " + this.cmdReq.value + ".");
-                        this.setTxLock( false );
 
-                        //start polling after 1s
-                        this.setTimeout( () => {
-                            if ( this.isConnected == true ){
-                                this.log.debug("polling updated outlet states");
-                                this.pollStates();
-                            } else {
-                                this.log.error("not connected to device.");
-                                // retry connecting possible
-                            }
-                        }, 1000);
-                    })
-                    .catch( () => {
-                        this.log.error("command failed becasue socket connection issue. Restarting adapter.");
-                        this.setState("connected", { val: false, ack: true } );
-                        this.restart();
-                    });
-            } else {
-                this.log.warn("given object value is not compatible. Command discarded.");
+            //find if outlet is set to read only
+            const idReadOnly = idName + "_readOnly";
+            const valReadOnly = await this.getStateAsync(idReadOnly);
+            if ( valReadOnly && valReadOnly.val == true )
+            {
+                //state change not allowed; read only protection
+                this.log.info("ignore state change because state " + idName +  " is set to read only");
+            } else if (valReadOnly && valReadOnly.val == false ){
+                //state change allowed
+
+                //setup cmd
+                switch ( idName ){
+                    case "outlet1" : this.cmdReq.itemId = 0x00; break;
+                    case "outlet2" : this.cmdReq.itemId = 0x01; break;
+                    case "outlet3" : this.cmdReq.itemId = 0x02; break;
+                    case "outlet4" : this.cmdReq.itemId = 0x03; break;
+                    case "outlet4_dimmer" : this.cmdReq.itemId = 0x04; break;
+                    default : this.cmdReq.itemId = 0xff;
+                }
+                switch ( state.val ){
+                    case false : this.cmdReq.value = 0x00; break;
+                    case true : this.cmdReq.value = 0xff; break;
+                    default : this.cmdReq.value = Number(state.val);
+                }
+                if ( ( this.cmdReq.itemId != 0xff ) && ( this.cmdReq.value <= 0xff ) && ( this.cmdReq.value >= 0x00) ){
+                    //process cmd
+                    this.reqOutletSwitch( this.cmdReq.itemId, this.cmdReq.value )
+                        .then( () => {
+                            this.log.debug("command for outlet (" + this.cmdReq.itemId + ") has been requested to switch to value " + this.cmdReq.value + ".");
+                            this.setTxLock( false );
+
+                            //start polling after 1s
+                            this.setTimeout( () => {
+                                if ( this.isConnected == true ){
+                                    this.log.debug("polling updated outlet states");
+                                    this.pollStates();
+                                } else {
+                                    this.log.error("not connected to device.");
+                                    // retry connecting possible
+                                }
+                            }, 1000);
+                        })
+                        .catch( () => {
+                            this.log.error("command failed becasue socket connection issue. Restarting adapter.");
+                            this.setState("connected", { val: false, ack: true } );
+                            this.restart();
+                        });
+                } else {
+                    this.log.warn("given object value is not compatible. Command discarded.");
+                }
+            }
+            else {
+                this.log.error("warning: read only switch does not exist");
             }
 
             //cleanup

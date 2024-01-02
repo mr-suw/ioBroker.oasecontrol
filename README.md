@@ -12,6 +12,7 @@ Current devices under test:
 Current supported features:
 - switchable power outlets
 - dimmable power outlet
+- new object elements for making an outlet switch read only
 ### Best Practices
 We've collected some [best practices](https://github.com/ioBroker/ioBroker.repositories#development-and-coding-best-practices) regarding ioBroker development and coding in general. If you're new to ioBroker or Node.js, you should
 check them out. If you're already experienced, you should also take a look at them - you might learn something new :)
@@ -74,6 +75,8 @@ Please refer to the [`dev-server` documentation](https://github.com/ioBroker/dev
     Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**
 -->
+
+* v0.0.3 add feature read only outlets
 * v0.0.2 adapter compliance
 * v0.0.1 communication with OASE device working
 
