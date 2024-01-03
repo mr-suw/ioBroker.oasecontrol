@@ -223,6 +223,7 @@ class Oasecontrol extends utils.Adapter {
             this.subscribeStatesAsync("outlet4");
             this.subscribeStatesAsync("outlet4_dimmer");
 
+            this.log.debug("creating read-only switches...");
             await this.createObj("outlet1_readOnly", "outlet1_readOnly", "state", "switch", "boolean", true, true);
             await this.createObj("outlet2_readOnly", "outlet2_readOnly", "state", "switch", "boolean", true, true);
             await this.createObj("outlet3_readOnly", "outlet3_readOnly", "state", "switch", "boolean", true, true);
@@ -236,6 +237,21 @@ class Oasecontrol extends utils.Adapter {
             if ( roValOutlet2 == null ) {  this.setStateAsync("oasecontrol.0.outlet2_readOnly", false ); }
             if ( roValOutlet3 == null ) {  this.setStateAsync("oasecontrol.0.outlet3_readOnly", false ); }
             if ( roValOutlet4 == null ) {  this.setStateAsync("oasecontrol.0.outlet4_readOnly", false ); }
+
+            this.log.debug("creating switch names...");
+            await this.createObj("outlet1_name", "outlet1_name", "state", "text", "string", true, true);
+            await this.createObj("outlet2_name", "outlet2_name", "state", "text", "string", true, true);
+            await this.createObj("outlet3_name", "outlet3_name", "state", "text", "string", true, true);
+            await this.createObj("outlet4_name", "outlet4_name", "state", "text", "string", true, true);
+
+            const nameValOutlet1 =  await this.getStateAsync("oasecontrol.0.outlet1_name");
+            const nameValOutlet2 =  await this.getStateAsync("oasecontrol.0.outlet2_name");
+            const nameValOutlet3 =  await this.getStateAsync("oasecontrol.0.outlet3_name");
+            const nameValOutlet4 =  await this.getStateAsync("oasecontrol.0.outlet4_name");
+            if ( nameValOutlet1 == null ) {  this.setStateAsync("oasecontrol.0.outlet1_name", "outlet1" ); }
+            if ( nameValOutlet2 == null ) {  this.setStateAsync("oasecontrol.0.outlet2_name", "outlet2" ); }
+            if ( nameValOutlet3 == null ) {  this.setStateAsync("oasecontrol.0.outlet3_name", "outlet3" ); }
+            if ( nameValOutlet4 == null ) {  this.setStateAsync("oasecontrol.0.outlet4_name", "outlet4" ); }
 
             this.isSubscDone = true;
             this.log.debug("adapter objects created.");

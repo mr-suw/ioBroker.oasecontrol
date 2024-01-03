@@ -71,10 +71,7 @@ The ioBroker.admin interface will then be available at http://localhost:8081/
 Please refer to the [`dev-server` documentation](https://github.com/ioBroker/dev-server#command-line) for more details.
 
 ## Changelog
-<!--
-    Placeholder for the next version (at the beginning of the line):
-    ### v0.0.3 add feature read only outlets
--->
+* v0.0.4 introduce of outlet names
 * v0.0.3 add feature read only outlets
 * v0.0.2 adapter compliance
 * v0.0.1 communication with OASE device working

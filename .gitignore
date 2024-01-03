@@ -6,6 +6,8 @@
 # misc
 doc/*
 .DS_Store
+iob
+iobroker
 
 *.code-workspace
 node_modules
