@@ -1,8 +1,11 @@
 {
   "common": {
     "name": "oasecontrol",
-    "version": "0.0.2",
+    "version": "0.0.5",
     "news": {
+      "0.0.5": {
+        "en": "input error checks"
+      },
       "0.0.2": {
         "en": "adapter compliance",
         "de": "adapter compliance",
