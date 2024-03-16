@@ -229,14 +229,14 @@ class Oasecontrol extends utils.Adapter {
             await this.createObj("outlet3_readOnly", "outlet3_readOnly", "state", "switch", "boolean", true, true);
             await this.createObj("outlet4_readOnly", "outlet4_readOnly", "state", "switch", "boolean", true, true);
 
-            const roValOutlet1 =  await this.getStateAsync("oasecontrol.0.outlet1_readOnly");
-            const roValOutlet2 =  await this.getStateAsync("oasecontrol.0.outlet2_readOnly");
-            const roValOutlet3 =  await this.getStateAsync("oasecontrol.0.outlet3_readOnly");
-            const roValOutlet4 =  await this.getStateAsync("oasecontrol.0.outlet4_readOnly");
-            if ( roValOutlet1 == null ) {  this.setStateAsync("oasecontrol.0.outlet1_readOnly", false ); }
-            if ( roValOutlet2 == null ) {  this.setStateAsync("oasecontrol.0.outlet2_readOnly", false ); }
-            if ( roValOutlet3 == null ) {  this.setStateAsync("oasecontrol.0.outlet3_readOnly", false ); }
-            if ( roValOutlet4 == null ) {  this.setStateAsync("oasecontrol.0.outlet4_readOnly", false ); }
+            const roValOutlet1 =  await this.getStateAsync(this.name+"."+this.instance+".outlet1_readOnly");
+            const roValOutlet2 =  await this.getStateAsync(this.name+"."+this.instance+".outlet2_readOnly");
+            const roValOutlet3 =  await this.getStateAsync(this.name+"."+this.instance+".outlet3_readOnly");
+            const roValOutlet4 =  await this.getStateAsync(this.name+"."+this.instance+".outlet4_readOnly");
+            if ( roValOutlet1 == null ) {  this.setStateAsync(this.name+"."+this.instance+".outlet1_readOnly", false ); }
+            if ( roValOutlet2 == null ) {  this.setStateAsync(this.name+"."+this.instance+".outlet2_readOnly", false ); }
+            if ( roValOutlet3 == null ) {  this.setStateAsync(this.name+"."+this.instance+".outlet3_readOnly", false ); }
+            if ( roValOutlet4 == null ) {  this.setStateAsync(this.name+"."+this.instance+".outlet4_readOnly", false ); }
 
             this.log.debug("creating switch names...");
             await this.createObj("outlet1_name", "outlet1_name", "state", "text", "string", true, true);
@@ -244,14 +244,14 @@ class Oasecontrol extends utils.Adapter {
             await this.createObj("outlet3_name", "outlet3_name", "state", "text", "string", true, true);
             await this.createObj("outlet4_name", "outlet4_name", "state", "text", "string", true, true);
 
-            const nameValOutlet1 =  await this.getStateAsync("oasecontrol.0.outlet1_name");
-            const nameValOutlet2 =  await this.getStateAsync("oasecontrol.0.outlet2_name");
-            const nameValOutlet3 =  await this.getStateAsync("oasecontrol.0.outlet3_name");
-            const nameValOutlet4 =  await this.getStateAsync("oasecontrol.0.outlet4_name");
-            if ( nameValOutlet1 == null ) {  this.setStateAsync("oasecontrol.0.outlet1_name", "outlet1" ); }
-            if ( nameValOutlet2 == null ) {  this.setStateAsync("oasecontrol.0.outlet2_name", "outlet2" ); }
-            if ( nameValOutlet3 == null ) {  this.setStateAsync("oasecontrol.0.outlet3_name", "outlet3" ); }
-            if ( nameValOutlet4 == null ) {  this.setStateAsync("oasecontrol.0.outlet4_name", "outlet4" ); }
+            const nameValOutlet1 =  await this.getStateAsync(this.name+"."+this.instance+".outlet1_name");
+            const nameValOutlet2 =  await this.getStateAsync(this.name+"."+this.instance+".outlet2_name");
+            const nameValOutlet3 =  await this.getStateAsync(this.name+"."+this.instance+".outlet3_name");
+            const nameValOutlet4 =  await this.getStateAsync(this.name+"."+this.instance+".outlet4_name");
+            if ( nameValOutlet1 == null ) {  this.setStateAsync(this.name+"."+this.instance+".outlet1_name", "outlet1" ); }
+            if ( nameValOutlet2 == null ) {  this.setStateAsync(this.name+"."+this.instance+".outlet2_name", "outlet2" ); }
+            if ( nameValOutlet3 == null ) {  this.setStateAsync(this.name+"."+this.instance+".outlet3_name", "outlet3" ); }
+            if ( nameValOutlet4 == null ) {  this.setStateAsync(this.name+"."+this.instance+".outlet4_name", "outlet4" ); }
 
             this.isSubscDone = true;
             this.log.debug("adapter objects created.");
@@ -373,10 +373,6 @@ class Oasecontrol extends utils.Adapter {
             this.reqOutletStates().then( () => {
                 this.log.debug("polling of states done. Next poll cycle in " + this.config.optPollTime + " seconds.");
 
-                // setup cycle time for requesting new outlet states
-                this.polling = this.setTimeout( () => {
-                    this.pollStates();
-                }, this.config.optPollTime * 1000 );
             }).catch( (err) => {
                 this.txRetries = this.txRetries - 1;
                 this.log.warn("polling of outlet states failed: "+ err + ". Left retries: " + this.txRetries);
@@ -386,6 +382,11 @@ class Oasecontrol extends utils.Adapter {
                 }
             });
         }
+
+        // setup cycle time for requesting new outlet states
+        this.polling = this.setTimeout( () => {
+            this.pollStates();
+        }, this.config.optPollTime * 1000 );
     }
 
 
@@ -534,9 +535,6 @@ class Oasecontrol extends utils.Adapter {
 
             //cleanup
             this.setTxLock( false );
-        } else {
-            // The state was deleted
-            this.log.info(`state ${id} deleted`);
         }
     }
 
