@@ -65,8 +65,9 @@ class Oasecontrol extends utils.Adapter {
                             this.log.info("polling device states every " + this.config.optPollTime + " seconds");
                             this.pollStates();
                         } else {
-                            this.log.error("Connection to OASE device (" + this.config.optIp + ":" + this.portOase + ") was not possible. Please check that IP configuration is correct and device is online");
-                            this.disable();
+                            this.log.error("Error on OASE connection occured (" + this.config.optIp + ":" + this.portOase + ").");
+                            this.setState("connected", { val: false, ack: true } );
+                            this.restart();
                         }
                     }, 2000);
                 }).catch( () => {
