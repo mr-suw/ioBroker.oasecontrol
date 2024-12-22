@@ -2,9 +2,19 @@
     "i18n": true,
     "type": "panel",
     "items": {
-        "optIp": {
+        "optIpDevice": {
             "type": "text",
-            "label": "IP",
+            "label": "IP OASE device",
+            "newLine": true
+        },
+        "optIpTcpServer": {
+            "type": "text",
+            "label": "IP TCP server",
+            "newLine": true
+        },
+        "optDevicePassword": {
+            "type": "text",
+            "label": "OASE device password",
             "newLine": true
         },
         "optPollTime": {

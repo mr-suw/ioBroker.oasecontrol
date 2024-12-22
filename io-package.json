@@ -1,8 +1,11 @@
 {
   "common": {
     "name": "oasecontrol",
-    "version": "0.0.5",
+    "version": "0.0.6",
     "news": {
+      "0.0.6": {
+        "en": "upgrade to latest protocol"
+      },
       "0.0.5": {
         "en": "input error checks"
       },
@@ -92,8 +95,10 @@
     ]
   },
   "native": {
-    "optIp": "",
-    "optPollTime": 60
+    "optIpDevice": "",
+    "optIpTcpServer": "",
+    "optDevicePassword": "",
+    "optPollTime": 55
   },
   "objects": [],
   "instanceObjects": []
