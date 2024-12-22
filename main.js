@@ -10,8 +10,8 @@ const utils = require("@iobroker/adapter-core");
 //const { error } = require("console");
 
 // Load your modules here, e.g.:
-// const fs = require("fs");
-const dgram = require("dgram");
+const { OaseClient, TransportType, OaseProtocol } = require("./lib/oase");
+const { OaseServer } = require("./lib/oase/protocol"); 
 
 class Oasecontrol extends utils.Adapter {
 
@@ -24,23 +24,34 @@ class Oasecontrol extends utils.Adapter {
             name: "oasecontrol",
         });
         this.on("ready", this.onReady.bind(this));
+        // @ts-ignore
         this.on("stateChange", this.onStateChange.bind(this));
         // this.on("objectChange", this.onObjectChange.bind(this));
         // this.on("message", this.onMessage.bind(this));
         this.on("unload", this.onUnload.bind(this));
-        this.portOase = 5959;
-        this.seq = 0x00;
-        this.magicBytes = Buffer.from([0x5c, 0x23, 0x4f, 0x41]);
-        this.txRetries = 3;
-        this.client = undefined;
-        this.polling = null;
+
+        this.oaseClient = null;
+        this.oaseServer = null;
+        this.pollingGetScene = null;
+        this.pollingKeepAlive = null;
+        this.enableKeepAlive = false;
+        this.intervalKeepAlive = 30;
         this.isConnected = false;
-        this.isSubscDone = false;
+        this.tlsPort = 5999;
+        this.udpPort = 5959;
         this.isTxLock = false;
+        this.txRetries = 3;
         this.cmdReq = {
             itemId : 0x00,
             value : 0x00
         };
+    }
+
+    getOaseClient() {
+        if (!this.oaseClient) {
+            throw new Error("OaseClient not initialized");
+        }
+        return this.oaseClient;
     }
 
     /**
@@ -48,346 +59,259 @@ class Oasecontrol extends utils.Adapter {
      */
     async onReady() {
         this.checkCfg();
+        this.protocol = new OaseProtocol();
 
-        this.setState("connected", { val: false, ack: true } );
+        // Set initial states
+        this.createObj("info.connection", "info.connection", "state", "indicator", "boolean", false, true);
+        this.setState("info.connection", { val: false, ack: true });
 
-        //create initial states
-        this.createInitialStates();
-
-        //connection logic
-        this.createSocket()
-            .then( () => {
-                //req device info
-                this.reqDevInfo().then( () =>  {
-                    //start polling after 2s
-                    this.setTimeout( () => {
-                        if ( this.isConnected == true ){
-                            this.log.info("polling device states every " + this.config.optPollTime + " seconds");
-                            this.pollStates();
-                        } else {
-                            this.log.error("Error on OASE connection occured (" + this.config.optIp + ":" + this.portOase + ").");
-                            this.setState("connected", { val: false, ack: true } );
-                            this.restart();
-                        }
-                    }, 2000);
-                }).catch( () => {
-                    this.log.error("requesting device info failed. Restarting adapter.");
-                    this.setState("connected", { val: false, ack: true } );
-                    this.restart();
-                });
-            })
-            .catch( () => {
-                this.log.error("socket connection failed. Restarting adapter.");
-                this.setState("connected", { val: false, ack: true } );
-                this.restart();
+        try {
+            this.log.debug("initializing TLS server...");
+            this.oaseServer = new OaseServer({
+                host: this.config.optIpAdapter,
+                port: this.tlsPort,
+                protocol: this.protocol,
+                log: this.log
             });
+
+            this.log.debug("starting TCP server with TLS...");
+            this.oaseServer.start();
+
+            this.log.debug("initializing client...");
+            this.oaseClient = new OaseClient({
+                host: this.config.optIpDevice,
+                protocol: this.protocol,
+                server: this.oaseServer,
+                udpPort: this.udpPort,
+                log: this.log
+            });
+
+            this.oaseServer.setClient(this.getOaseClient());
+
+            // Connect UDP client
+            this.log.debug("connecting UDP client...");
+            await this.getOaseClient().connectUdp();
+
+            // Initial device discovery via UDP
+            this.log.debug("discovering device...");
+            const discovery = await this.getOaseClient().discoveryReq(TransportType.UDP);
+            this.log.debug("checking for supported devices...");
+            if (discovery.lname.startsWith("FM-Master EGC")) {
+                this.log.info("Detected device:" + discovery.lname);
+                await this.initFmMasterEgcStates();
+                await this.updateDiscoveryStates(discovery);
+            } else {
+                throw new Error(`Device not supported: ${discovery.lname}`);
+            }
+
+            // Request TLS connection
+            this.log.debug("requesting TLS connection...");
+            const conReq = await this.getOaseClient().tcpConReq(this.tlsPort);
+            if (conReq.error != "") {
+                throw new Error("TCP connection failed: " + conReq.error);
+            }
+
+            // Wait for TLS handshake
+            await this.oaseServer.waitForHandshake();
+
+            await this.handleTlsConnection();
+        } catch (err) {
+            this.log.error(`Failed to initialize adapter: ${err}`);
+            this.restart();
+        }
+    }
+
+    async sleep(ms){
+        await new Promise((resolve) => setTimeout(resolve, ms));
+    }
+
+    async handleTlsConnection() {
+        try {
+            await this.sleep(1000);
+
+            // Authenticate using TLS
+            this.log.debug("authenticating TLS connection...");
+
+            const pwCheck = await this.getOaseClient().checkDevicePwReq(
+                this.config.optDevicePassword,
+                TransportType.TLS
+            );
+
+            if (!pwCheck) {
+                throw new Error("Authentication failed");
+            }
+
+            this.log.info("authenticated to device");
+            this.setState("info.connection", { val: true, ack: true });
+            this.isConnected = true;
+
+            // start keep alive handling
+            if (this.enableKeepAlive) {
+                this.log.debug("starting keep alive polling...");
+                this.startKeepAlive();
+            }
+
+            // Start scene polling
+            this.startScenePolling();
+
+        } catch (err) {
+            this.log.error(`TLS client error: ${err}`);
+            this.restart();
+        }
+    }
+
+    startScenePolling() {
+        this.pollingGetScene = setInterval(async () => {
+            if (!this.isTxLocked()) {
+                try {
+                    const sceneData = this.getOaseClient().createFmMasterSocketSceneGet();
+                    const gls = await this.getOaseClient().getLiveSceneReq(sceneData, TransportType.TLS);
+                    if (gls.error != "") {
+                        throw new Error(`Invalid poll scene states answer: ${gls.error}`);
+                    }
+                    const ssg = this.getProtocol().parseSocketSceneGetReply(gls.data);
+                    if (ssg.error != "") {
+                        throw new Error(`Invalid poll scene socke answer: ${ssg.error}`);
+                    }
+                    this.updateFmMasterStates(ssg);
+                } catch (err) {
+                    this.txRetries--;
+                    this.log.warn(`Polling failed. Retries left: ${this.txRetries}`);
+                    console.log("scene polling error: " + err );
+                    if (this.txRetries <= 0) {
+                        this.log.error(`Max retries reached. Restarting adapter`);
+                        clearInterval(this.pollingGetScene);
+                        this.restart();
+                    }
+                }
+            }
+        }, this.config.optPollTime * 1000);
+    }
+
+    startKeepAlive() {
+        this.pollingKeepAlive = setInterval(async () => {
+            try {
+                const alive = await this.getOaseClient().aliveReq( TransportType.TLS );
+                if (alive.error != "") {
+                    throw new Error(`Invalid keep alive answer: ${alive.error}`);
+                } else {
+                    this.log.debug("keep-alive successful (sn: " + alive.sn +" )" );
+                }
+            } catch (err) {
+                console.log("scene polling error: " + err.message );                
+            }
+        }, this.intervalKeepAlive * 1000);
+    }
+
+    async updateFmMasterStates(states) {
+        this.setState("outlet1", { val: states.s1, ack: true });
+        this.setState("outlet2", { val: states.s2, ack: true });
+        this.setState("outlet3", { val: states.s3, ack: true });
+        this.setState("outlet4", { val: states.s4, ack: true });
+        this.setState("outlet4_dimmer", { val: states.s4_dim, ack: true });
+
+        this.log.debug("outlet states polled (" + states.s1 + ", " + states.s2 + ", " + states.s3 + ", " + states.s4 + ", " + states.s4_dim + ")");
+    }
+
+    bufferToHexString(buffer) {
+        return Buffer.from(buffer).toString('hex').toUpperCase();
+    }
+
+    getProtocol(){
+        if (!this.protocol) {
+            throw new Error("Protocol not initialized");
+        } else {
+            return this.protocol;
+        }
     }
 
     checkCfg(){
-        if (this.config.optIp == "" || (this.config.optPollTime < 10))
+        if (this.config.optIpAdapter == "" || this.config.optIpDevice == "" || this.config.optDevicePassword == "")
         {
-            this.log.error("IP address not set or polling time below 10 seconds.");
+            this.log.error(`IP address, device IP address or device password not set.`);
             this.disable();
         }
-    }
-
-    createSocket(){
-        return new Promise((resolve, reject) => {
-            // create socket and connect to client
-            this.client = dgram.createSocket({ type: "udp4", reuseAddr: true} );
-
-            //register connection handlers
-            this.client.on("error", (err) => {
-                this.log.error("socket error: " + err);
-                if (this.client) { this.client.close(); }
-                reject(err);
-            });
-
-            this.client.on("listening", () => {
-                this.log.info("UDP connection ready.");
-                resolve(0);
-            });
-
-            this.client.on("message", this.onUdpMsg.bind(this) );
-
-            this.client.connect(this.portOase, this.config.optIp, () => {
-                this.log.info("created UDP socket for OASE device (" + this.config.optIp + ":" + this.portOase + ")");
-            });
-        });
-    }
-
-    sendUdpMsg(){
-        return new Promise( (resolve, reject) => {
-            if (this.client && this.tx ){
-                this.client.send( this.tx, (err) => {
-                    if (err) {
-                        reject(err);
-                    } else {
-                        resolve(0);
-                    }
-                });
-            } else {
-                const err = "objects client and tx buffer undefined";
-                this.log.error( err );
-                reject( err );
-            }
-        });
-    }
-
-    async onUdpMsg(msg, rinfo){
-        this.log.debug("new rx message from "+ rinfo.address + ":"+ rinfo.port +":\nASCII: "+ msg.toString("ascii") + "\n  HEX: " + msg.toString("hex"));
-
-        //parse messages
-        try {
-            const m = msg.slice(0, 4);
-            this.log.debug( "m: " + m.toString("hex"));
-
-            if ( 0 == this.magicBytes.compare( m ) ) {
-                //valid OASE message
-                const l = msg.readUInt16LE(4);
-                const s = msg.readUInt8(9);
-                const d = msg.readUInt8(10);
-
-                this.log.debug( "l: " + l +", s: "+ s + ", d: "+ d.toString(16));
-                if ( Number(d) === 0xff ) {
-                    //from OASE device
-                    const c = msg.readUInt8(11);
-                    const p = msg.slice( 16, Number(l) + 17 );
-                    this.log.debug("c: "+ c.toString(16) + ", p: " + p.toString("hex"));
-                    switch ( Number(c) ) {
-                        case 0x10 : this.parseDevInfo( p ); break;
-                        case 0xc4 : this.parseOutletCmd( p ); break;
-                        case 0xc5 : this.parseOutletStates( p ); break;
-                        default : this.log.debug("discard command ("+ c.toString("hex") + ") response: " + msg.toString("hex") );
-                    }
-                } else {
-                    this.log.debug("discard message because not from OASE device.");
-                }
-            } else {
-                this.log.debug("discarded unknown message.");
-            }
-        } catch (error) {
-            this.log.error("parser failed: "+ error);
-        }
-    }
-
-    async parseDevInfo( payload ){
-        this.log.debug("device info is: \nASCII: "+ payload.toString("ascii") + "\n  HEX: " + payload.toString("hex") );
-        const name = payload.slice(2, 34).toString("ascii").trim();
-        const sn = payload.slice(34, 66).toString("ascii").trim();
-        const devType = payload.slice(66, 134).toString("ascii").trim();
-
-        this.log.info("detected device: name: "+ name + ", serial number: " + sn + ", device type: " + devType);
-
-        //supported devices
-        if ( devType.startsWith("FM-Master EGC") ){
-            await this.createObj("name", "name", "state", "text", "string", false, true);
-            await this.createObj("serial-number", "sn", "state", "text", "string", false, true);
-            await this.createObj("device", "device", "state", "text", "string", false, true);
-
-            this.setState("name", name, true);
-            this.setState("serial-number", sn, true);
-            this.setState("device", devType, true);
-
-            //device is connected
-            this.setStateAsync("connected", { val: true, ack: true } );
-            this.isConnected = true;
-        } else {
-            this.log.error("sorry, your device type ("+ devType+ ") is not supported.");
+        //output config options
+        this.log.debug(`Adapter IP: ${this.config.optIpAdapter}`);
+        this.log.debug(`Device IP: ${this.config.optIpDevice}`);
+        this.log.debug(`Device password: ${this.config.optDevicePassword}`);
+        this.log.debug(`Polling time: ${this.config.optPollTime} seconds`);
+        if (this.config.optPollTime < 5 )
+        {
+            this.log.error(`Polling time below 5 seconds.`);
             this.disable();
         }
-    }
-
-    async parseOutletCmd( payload ){
-        this.log.debug("outlet cmd response: \nASCII: "+ payload.toString("ascii") + "\n  HEX: " + payload.toString("hex") );
-    }
-
-    async parseOutletStates( payload ){
-        this.log.debug("outlet states response: \nASCII: "+ payload.toString("ascii") + "\n  HEX: " + payload.toString("hex") );
-        const s1 = payload.readUInt8(11);
-        const s2 = payload.readUInt8(12);
-        const s3 = payload.readUInt8(13);
-        const s4 = payload.readUInt8(14);
-        const s4intensity = payload.readUInt8(15);
-
-        if ( this.isSubscDone == false ){
-            this.log.debug("creating adapter objects...");
-            await this.createObj("outlet1", "outlet1", "state", "switch", "boolean", true, true);
-            await this.createObj("outlet2", "outlet2", "state", "switch", "boolean", true, true);
-            await this.createObj("outlet3", "outlet3", "state", "switch", "boolean", true, true);
-            await this.createObj("outlet4", "outlet4", "state", "switch", "boolean", true, true);
-            await this.createObj("outlet4_dimmer", "outlet4dim", "state", "value", "number", true, true);
-
-            this.subscribeStatesAsync("outlet1");
-            this.subscribeStatesAsync("outlet2");
-            this.subscribeStatesAsync("outlet3");
-            this.subscribeStatesAsync("outlet4");
-            this.subscribeStatesAsync("outlet4_dimmer");
-
-            this.log.debug("creating read-only switches...");
-            await this.createObj("outlet1_readOnly", "outlet1_readOnly", "state", "switch", "boolean", true, true);
-            await this.createObj("outlet2_readOnly", "outlet2_readOnly", "state", "switch", "boolean", true, true);
-            await this.createObj("outlet3_readOnly", "outlet3_readOnly", "state", "switch", "boolean", true, true);
-            await this.createObj("outlet4_readOnly", "outlet4_readOnly", "state", "switch", "boolean", true, true);
-
-            const roValOutlet1 =  await this.getStateAsync(this.name+"."+this.instance+".outlet1_readOnly");
-            const roValOutlet2 =  await this.getStateAsync(this.name+"."+this.instance+".outlet2_readOnly");
-            const roValOutlet3 =  await this.getStateAsync(this.name+"."+this.instance+".outlet3_readOnly");
-            const roValOutlet4 =  await this.getStateAsync(this.name+"."+this.instance+".outlet4_readOnly");
-            if ( roValOutlet1 == null ) {  this.setStateAsync(this.name+"."+this.instance+".outlet1_readOnly", false ); }
-            if ( roValOutlet2 == null ) {  this.setStateAsync(this.name+"."+this.instance+".outlet2_readOnly", false ); }
-            if ( roValOutlet3 == null ) {  this.setStateAsync(this.name+"."+this.instance+".outlet3_readOnly", false ); }
-            if ( roValOutlet4 == null ) {  this.setStateAsync(this.name+"."+this.instance+".outlet4_readOnly", false ); }
-
-            this.log.debug("creating switch names...");
-            await this.createObj("outlet1_name", "outlet1_name", "state", "text", "string", true, true);
-            await this.createObj("outlet2_name", "outlet2_name", "state", "text", "string", true, true);
-            await this.createObj("outlet3_name", "outlet3_name", "state", "text", "string", true, true);
-            await this.createObj("outlet4_name", "outlet4_name", "state", "text", "string", true, true);
-
-            const nameValOutlet1 =  await this.getStateAsync(this.name+"."+this.instance+".outlet1_name");
-            const nameValOutlet2 =  await this.getStateAsync(this.name+"."+this.instance+".outlet2_name");
-            const nameValOutlet3 =  await this.getStateAsync(this.name+"."+this.instance+".outlet3_name");
-            const nameValOutlet4 =  await this.getStateAsync(this.name+"."+this.instance+".outlet4_name");
-            if ( nameValOutlet1 == null ) {  this.setStateAsync(this.name+"."+this.instance+".outlet1_name", "outlet1" ); }
-            if ( nameValOutlet2 == null ) {  this.setStateAsync(this.name+"."+this.instance+".outlet2_name", "outlet2" ); }
-            if ( nameValOutlet3 == null ) {  this.setStateAsync(this.name+"."+this.instance+".outlet3_name", "outlet3" ); }
-            if ( nameValOutlet4 == null ) {  this.setStateAsync(this.name+"."+this.instance+".outlet4_name", "outlet4" ); }
-
-            this.isSubscDone = true;
-            this.log.debug("adapter objects created.");
-        }
-
-        this.setState( "outlet1", (s1 === 255 ) ? true : false, true);
-        this.setState( "outlet2", (s2 === 255 ) ? true : false, true);
-        this.setState( "outlet3", (s3 === 255 ) ? true : false, true);
-        this.setState( "outlet4", (s4 === 255 ) ? true : false, true);
-        this.setState("outlet4_dimmer", s4intensity, true);
-
-        this.log.debug("outlet states: (outlet 1, outlet 2, outlet 3, outlet 4, outlet 4 dimmer) = (" + s1 + ", " + s2 + ", " + s3 + ", " +s4+ ", " +s4intensity + ")");
-    }
-
-    setNextSeq(){
-        if (this.seq == 0xff ){ this.seq = 0x00; }
-        this.seq = this.seq + 0x01;
-    }
-
-    reqDevInfo(){
-        return new Promise( (resolve, reject) => {
-            const lenMsb = 0x00;
-            const lenLsb = 0x00;
-            const cmd = 0x10;
-            this.bufReqDev = Buffer.from([lenMsb, lenLsb, 0x00, 0x00, 0x02, this.seq, 0x00, cmd, 0x00, 0x00, 0x00, 0x00] );
-            this.setNextSeq();
-            this.tx = Buffer.concat( [this.magicBytes, this.bufReqDev ]);
-            try {
-                this.sendUdpMsg().then( () => {
-                    if (this.tx){
-                        this.log.debug("req device info: "+ this.tx.toString("hex"));
-                        resolve(0);
-                    } else {
-                        reject(1);
-                    }
-                }).catch( () => {
-                    this.log.error("send UDP message failed.");
-                    reject(0);
-                });
-            } catch(err) {
-                this.log.error("req device info failed: " + this.tx.toString("hex"));
-                reject(err);
-            }
-        });
-    }
-
-    reqOutletStates(){
-        //request new states
-        return new Promise( (resolve, reject) => {
-            const lenMsb = 0x05;
-            const lenLsb = 0x00;
-            const cmd = 0xc5;
-            this.bufReqDev = Buffer.from([lenMsb, lenLsb, 0x00, 0x00, 0x02, this.seq, 0x00, cmd, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00] );
-            this.setNextSeq();
-            this.tx = Buffer.concat( [this.magicBytes, this.bufReqDev ]);
-            try {
-                this.sendUdpMsg().then( () => {
-                    if (this.tx){
-                        this.log.debug("req outlet states: "+ this.tx.toString("hex"));
-                        resolve(0);
-                    } else {
-                        reject(1);
-                    }
-                }).catch( () => {
-                    this.log.error("send UDP message failed.");
-                    reject(0);
-                });
-            } catch(err) {
-                this.log.error("req outlet states failed: " + this.tx.toString("hex"));
-                reject(err);
-            }
-        });
-    }
-
-    /*
-     * @param {Number} outletIdx: 0x00 ('outlet switch 1'), 0x01 ('outlet switch 2'), 0x02 ('outlet switch 3'), 0x03 ('outlet switch 4'), 0x04 ('dimmer intensity for outlet switch 4')
-     * @param {Number} outletIntensity: 0xff ('on'), 0x00 ('off') or dimmer intensity value
-    */
-    reqOutletSwitch( outletIdx, outletIntensity  ){
-        return new Promise( (resolve, reject) => {
-            const lenMsb = 0x0d;
-            const lenLsb = 0x00;
-            const cmd = 0xc4;
-            this.bufReqDev = Buffer.from([lenMsb, lenLsb, 0x00, 0x00, 0x02, this.seq, 0x00, cmd, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x64, 0x02, outletIdx, outletIntensity] );
-            this.setNextSeq();
-            this.tx = Buffer.concat( [this.magicBytes, this.bufReqDev ]);
-            try {
-                this.sendUdpMsg().then( () => {
-                    if (this.tx){
-                        this.log.debug("req outlet switch: "+ this.tx.toString("hex"));
-                        resolve(0);
-                    } else {
-                        reject(1);
-                    }
-                }).catch( () => {
-                    this.log.error("send UDP message failed.");
-                    reject(0);
-                });
-            } catch(err) {
-                this.log.error("req outlet switch failed: " + this.tx.toString("hex"));
-                reject(err);
-            }
-        });
-    }
-
-    async pollStates() {
-        //clear cylce time
-        if (this.polling)
+        else if (this.config.optPollTime > 55 )
         {
-            this.clearTimeout(this.polling);
-            this.polling = null;
-            this.log.debug("polling cycle time cleared.");
+            this.log.warn(`Polling time above 55 seconds requires sending a keep alive message to the device.`);
+
+            //check that keep alive is not send on same time as polling states
+            if (this.config.optPollTime % this.intervalKeepAlive === 0) {
+                this.intervalKeepAlive += 7
+            }
+
+            this.enableKeepAlive = true;
         }
+    }
 
-        this.log.debug("polling of states started.");
+    async updateDiscoveryStates( discovery ){
+        this.setState("name", discovery.name, true);
+        this.setState("serial-number", discovery.sn, true);
+        this.setState("device", discovery.lname, true);
+    }
 
-        if ( this.isTxLocked() == false ){
-            // request new outlet states
-            this.reqOutletStates().then( () => {
-                this.log.debug("polling of states done. Next poll cycle in " + this.config.optPollTime + " seconds.");
+    async initFmMasterEgcStates(){
+        this.log.debug("initializing discovery objects...");
+        await this.createObj("name", "name", "state", "text", "string", false, true);
+        await this.createObj("serial-number", "sn", "state", "text", "string", false, true);
+        await this.createObj("device", "device", "state", "text", "string", false, true);
 
-            }).catch( (err) => {
-                this.txRetries = this.txRetries - 1;
-                this.log.warn("polling of outlet states failed: "+ err + ". Left retries: " + this.txRetries);
-                if ( this.txRetries <= 0){
-                    this.log.error("polling of outlet states failed: "+ err + ". Left retries: " + this.txRetries + ". Restarting adapter");
-                    this.restart();
-                }
-            });
-        }
+        this.log.debug("initializing FM Master outlet objects...");
+        await this.createObj("outlet1", "outlet1", "state", "switch", "boolean", true, true);
+        await this.createObj("outlet2", "outlet2", "state", "switch", "boolean", true, true);
+        await this.createObj("outlet3", "outlet3", "state", "switch", "boolean", true, true);
+        await this.createObj("outlet4", "outlet4", "state", "switch", "boolean", true, true);
+        await this.createObj("outlet4_dimmer", "outlet4dim", "state", "value", "number", true, true);
 
-        // setup cycle time for requesting new outlet states
-        this.polling = this.setTimeout( () => {
-            this.pollStates();
-        }, this.config.optPollTime * 1000 );
+        this.subscribeStatesAsync("outlet1");
+        this.subscribeStatesAsync("outlet2");
+        this.subscribeStatesAsync("outlet3");
+        this.subscribeStatesAsync("outlet4");
+        this.subscribeStatesAsync("outlet4_dimmer");
+
+        this.log.debug("creating FM Master read-only switches...");
+        await this.createObj("outlet1_readOnly", "outlet1_readOnly", "state", "switch", "boolean", true, true);
+        await this.createObj("outlet2_readOnly", "outlet2_readOnly", "state", "switch", "boolean", true, true);
+        await this.createObj("outlet3_readOnly", "outlet3_readOnly", "state", "switch", "boolean", true, true);
+        await this.createObj("outlet4_readOnly", "outlet4_readOnly", "state", "switch", "boolean", true, true);
+
+        this.log.debug("initialize read-only switches...");
+        const roValOutlet1 =  await this.getStateAsync(this.name+"."+this.instance+".outlet1_readOnly");
+        const roValOutlet2 =  await this.getStateAsync(this.name+"."+this.instance+".outlet2_readOnly");
+        const roValOutlet3 =  await this.getStateAsync(this.name+"."+this.instance+".outlet3_readOnly");
+        const roValOutlet4 =  await this.getStateAsync(this.name+"."+this.instance+".outlet4_readOnly");
+        if ( roValOutlet1 == null ) {  this.setState(this.name+"."+this.instance+".outlet1_readOnly", false ); }
+        if ( roValOutlet2 == null ) {  this.setState(this.name+"."+this.instance+".outlet2_readOnly", false ); }
+        if ( roValOutlet3 == null ) {  this.setState(this.name+"."+this.instance+".outlet3_readOnly", false ); }
+        if ( roValOutlet4 == null ) {  this.setState(this.name+"."+this.instance+".outlet4_readOnly", false ); }
+
+        this.log.debug("creating FM master switch names...");
+        await this.createObj("outlet1_name", "outlet1_name", "state", "text", "string", true, true);
+        await this.createObj("outlet2_name", "outlet2_name", "state", "text", "string", true, true);
+        await this.createObj("outlet3_name", "outlet3_name", "state", "text", "string", true, true);
+        await this.createObj("outlet4_name", "outlet4_name", "state", "text", "string", true, true);
+
+        this.log.debug("initialize switch default names...");
+        const nameValOutlet1 =  await this.getStateAsync(this.name+"."+this.instance+".outlet1_name");
+        const nameValOutlet2 =  await this.getStateAsync(this.name+"."+this.instance+".outlet2_name");
+        const nameValOutlet3 =  await this.getStateAsync(this.name+"."+this.instance+".outlet3_name");
+        const nameValOutlet4 =  await this.getStateAsync(this.name+"."+this.instance+".outlet4_name");
+        if ( nameValOutlet1 == null ) {  this.setState(this.name+"."+this.instance+".outlet1_name", "outlet1" ); }
+        if ( nameValOutlet2 == null ) {  this.setState(this.name+"."+this.instance+".outlet2_name", "outlet2" ); }
+        if ( nameValOutlet3 == null ) {  this.setState(this.name+"."+this.instance+".outlet3_name", "outlet3" ); }
+        if ( nameValOutlet4 == null ) {  this.setState(this.name+"."+this.instance+".outlet4_name", "outlet4" ); }
+
+        this.log.debug("adapter objects created.");
     }
 
 
@@ -405,10 +329,6 @@ class Oasecontrol extends utils.Adapter {
         });
     }
 
-    async createInitialStates(){
-        this.createObj("connected", "connected", "state", "indicator", "boolean", false, true );
-    }
-
     /**
      * Is called when adapter shuts down - callback has to be called under any circumstances!
      * @param {() => void} callback
@@ -420,8 +340,10 @@ class Oasecontrol extends utils.Adapter {
             // clearTimeout(timeout2);
             // ...
             // clearInterval(interval1);
-            if (this.polling){ this.clearTimeout(this.polling); }
-            if (this.client) { this.client.close(); }
+            if (this.pollingGetScene){ clearInterval(this.pollingGetScene); }
+            if (this.pollingKeepAlive){ clearInterval(this.pollingKeepAlive); }
+            if (this.oaseServer) { this.oaseServer.stop(); }
+            if (this.oaseClient) { this.oaseClient.close(); }
 
             callback();
         } catch (e) {
@@ -485,7 +407,7 @@ class Oasecontrol extends utils.Adapter {
             }
             if ( valReadOnly == null )
             {
-                this.log.error("read only states not available");
+                this.log.error(`read only states not available`);
                 return 0;
             }
 
@@ -508,31 +430,13 @@ class Oasecontrol extends utils.Adapter {
             }
             if ( ( this.cmdReq.itemId != 0xff ) && ( this.cmdReq.value <= 0xff ) && ( this.cmdReq.value >= 0x00) ){
                 //process cmd
-                this.reqOutletSwitch( this.cmdReq.itemId, this.cmdReq.value )
-                    .then( () => {
-                        this.log.debug("command for outlet (" + this.cmdReq.itemId + ") has been requested to switch to value " + this.cmdReq.value + ".");
-                        this.setTxLock( false );
-
-                        //start polling after 1s
-                        this.setTimeout( () => {
-                            if ( this.isConnected == true ){
-                                this.log.debug("polling updated outlet states");
-                                this.pollStates();
-                            } else {
-                                this.log.error("not connected to device.");
-                                // retry connecting possible
-                            }
-                        }, 1000);
-                    })
-                    .catch( () => {
-                        this.log.error("command failed becasue socket connection issue. Restarting adapter.");
-                        this.setState("connected", { val: false, ack: true } );
-                        this.restart();
-                    });
+                const sceneData = this.getOaseClient().createFmMasterSocketSceneSet( this.cmdReq.itemId, this.cmdReq.value );
+                const res = await this.getOaseClient().setLiveSceneReq( sceneData, TransportType.TLS );
+                this.log.info("outlet "+ this.cmdReq.itemId + " -> " + this.cmdReq.value + " : " + res );
+                this.setTxLock( false );
             } else {
                 this.log.warn("given object value is not compatible. Command discarded.");
             }
-
 
             //cleanup
             this.setTxLock( false );
