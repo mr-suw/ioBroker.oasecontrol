@@ -68,7 +68,7 @@ class Oasecontrol extends utils.Adapter {
         try {
             this.log.debug("initializing TLS server...");
             this.oaseServer = new OaseServer({
-                host: this.config.optIpAdapter,
+                host: this.config.optIpTcpServer,
                 port: this.tlsPort,
                 protocol: this.protocol,
                 log: this.log
@@ -104,11 +104,13 @@ class Oasecontrol extends utils.Adapter {
                 throw new Error(`Device not supported: ${discovery.lname}`);
             }
 
-            // Request TLS connection
-            this.log.debug("requesting TLS connection...");
+            // Request TCP connection
+            this.log.debug("requesting TCP connection over UDP...");
             const conReq = await this.getOaseClient().tcpConReq(this.tlsPort);
             if (conReq.error != "") {
-                throw new Error("TCP connection failed: " + conReq.error);
+                throw new Error("TCP connection req failed: " + conReq.error);
+            } else {
+                this.log.debug("TCP connection req successful");
             }
 
             // Wait for TLS handshake
@@ -226,13 +228,13 @@ class Oasecontrol extends utils.Adapter {
     }
 
     checkCfg(){
-        if (this.config.optIpAdapter == "" || this.config.optIpDevice == "" || this.config.optDevicePassword == "")
+        if (this.config.optIpTcpServer == "" || this.config.optIpDevice == "" || this.config.optDevicePassword == "")
         {
             this.log.error(`IP address, device IP address or device password not set.`);
             this.disable();
         }
         //output config options
-        this.log.debug(`Adapter IP: ${this.config.optIpAdapter}`);
+        this.log.debug(`Adapter IP: ${this.config.optIpTcpServer}`);
         this.log.debug(`Device IP: ${this.config.optIpDevice}`);
         this.log.debug(`Device password: ${this.config.optDevicePassword}`);
         this.log.debug(`Polling time: ${this.config.optPollTime} seconds`);
