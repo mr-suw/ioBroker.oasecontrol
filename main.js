@@ -18,11 +18,14 @@ class Oasecontrol extends utils.Adapter {
     /**
      * @param {Partial<utils.AdapterOptions>} [options={}]
      */
-    constructor(options) {
-        super({
-            ...options,
-            name: "oasecontrol",
-        });
+    constructor(options = {}) {
+        super({...options, name: 'oasecontrol'});
+        // Add retry configuration
+        this.INITIAL_RETRY_DELAY = 60 * 1000;  // 1 minute
+        this.MAX_RETRY_DELAY = 2 * 60 * 60 * 1000;  // 2 hours
+        this.retryAttempts = 0;
+        this.discoveryTimer = null;
+
         this.on("ready", this.onReady.bind(this));
         // @ts-ignore
         this.on("stateChange", this.onStateChange.bind(this));
@@ -54,19 +57,61 @@ class Oasecontrol extends utils.Adapter {
         return this.oaseClient;
     }
 
+    calculateNextRetryDelay() {
+        // Exponential backoff: 1min, 5min, 20min, 1hr, 2hr
+        const delay = this.INITIAL_RETRY_DELAY * Math.pow(4, this.retryAttempts);
+        return Math.min(delay, this.MAX_RETRY_DELAY);
+    }
+
+    async tryDiscovery() {
+        try {
+            await this.getOaseClient().connectUdp();
+            const discovery = await this.getOaseClient().discoveryReq(TransportType.UDP);
+            
+            if (discovery.lname.startsWith("FM-Master EGC")) {
+                this.log.info("Detected device:" + discovery.lname);
+                this.retryAttempts = 0;
+                await this.initFmMasterEgcStates();
+                await this.updateDiscoveryStates(discovery);
+                return true;
+            }
+            return false;
+        } catch (err) {
+            return false;
+        }
+    }
+
+    async scheduleNextDiscovery() {
+        const delay = this.calculateNextRetryDelay();
+        this.log.info(`Device not available, next retry in ${Math.floor(delay/1000)} seconds`);
+        this.retryAttempts++;
+
+        if (this.discoveryTimer) {
+            clearTimeout(this.discoveryTimer);
+        }
+
+        return new Promise(resolve => {
+            this.discoveryTimer = setTimeout(async () => {
+                const success = await this.tryDiscovery();
+                resolve(success);
+            }, delay);
+        });
+    }
+
     /**
      * Is called when databases are connected and adapter received configuration.
      */
     async onReady() {
-        this.checkCfg();
-        this.protocol = new OaseProtocol();
-
-        // Set initial states
-        this.createObj("info.connection", "info.connection", "state", "indicator", "boolean", false, true);
-        this.setState("info.connection", { val: false, ack: true });
-
         try {
+            this.checkCfg();
+            
+            // Set initial states
+            this.createObj("info.connection", "info.connection", "state", "indicator", "boolean", false, true);
+            this.setState("info.connection", { val: false, ack: true });
+
+            // Initialize components
             this.log.debug("initializing TLS server...");
+            this.protocol = new OaseProtocol();
             this.oaseServer = new OaseServer({
                 host: this.config.optIpTcpServer,
                 port: this.tlsPort,
@@ -74,6 +119,7 @@ class Oasecontrol extends utils.Adapter {
                 log: this.log
             });
 
+            // Start TLS server
             this.log.debug("starting TCP server with TLS...");
             this.oaseServer.start();
 
@@ -92,32 +138,25 @@ class Oasecontrol extends utils.Adapter {
             this.log.debug("connecting UDP client...");
             await this.getOaseClient().connectUdp();
 
-            // Initial device discovery via UDP
-            this.log.debug("discovering device...");
-            const discovery = await this.getOaseClient().discoveryReq(TransportType.UDP);
-            this.log.debug("checking for supported devices...");
-            if (discovery.lname.startsWith("FM-Master EGC")) {
-                this.log.info("Detected device:" + discovery.lname);
-                await this.initFmMasterEgcStates();
-                await this.updateDiscoveryStates(discovery);
-            } else {
-                throw new Error(`Device not supported: ${discovery.lname}`);
+            // Try discovery with retries
+            while (true) {
+                const discovered = await this.tryDiscovery();
+                if (discovered) {
+                    // Continue with existing connection flow
+                    const conReq = await this.getOaseClient().tcpConReq(this.tlsPort);
+                    if (conReq.error) {
+                        throw new Error("TCP connection req failed: " + conReq.error);
+                    }
+                    
+                    this.log.debug("waiting for TLS handshake from device...");
+                    await this.oaseServer.waitForHandshake();
+                    await this.handleTlsConnection();
+                    break;
+                } else {
+                    await this.scheduleNextDiscovery();
+                }
             }
 
-            // Request TCP connection
-            this.log.debug("requesting TCP connection over UDP...");
-            const conReq = await this.getOaseClient().tcpConReq(this.tlsPort);
-            if (conReq.error != "") {
-                throw new Error("TCP connection req failed: " + conReq.error);
-            } else {
-                this.log.debug("TCP connection req successful");
-            }
-
-            // Wait for TLS handshake
-            this.log.debug("waiting for TLS handshake from device...");
-            await this.oaseServer.waitForHandshake();
-
-            await this.handleTlsConnection();
         } catch (err) {
             this.log.error(`Failed to initialize adapter: ${err}`);
             this.restart();
@@ -203,15 +242,17 @@ class Oasecontrol extends utils.Adapter {
 
     startKeepAlive() {
         this.pollingKeepAlive = setInterval(async () => {
-            try {
-                const alive = await this.getOaseClient().aliveReq( TransportType.TLS );
-                if (alive.error != "") {
-                    throw new Error(`Invalid keep alive answer: ${alive.error}`);
-                } else {
-                    this.log.debug("keep-alive successful (sn: " + alive.sn +" )" );
+            if (!this.isTxLocked()) {
+                try {
+                    const alive = await this.getOaseClient().aliveReq( TransportType.TLS );
+                    if (alive.error != "") {
+                        throw new Error(`Invalid keep alive answer: ${alive.error}`);
+                    } else {
+                        this.log.debug("keep-alive successful (sn: " + alive.sn +" )" );
+                    }
+                } catch (err) {
+                    console.log("scene polling error: " + err.message );                
                 }
-            } catch (err) {
-                console.log("scene polling error: " + err.message );                
             }
         }, this.intervalKeepAlive * 1000);
     }
