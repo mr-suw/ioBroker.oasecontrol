@@ -114,6 +114,7 @@ class Oasecontrol extends utils.Adapter {
             }
 
             // Wait for TLS handshake
+            this.log.debug("waiting for TLS handshake from device...");
             await this.oaseServer.waitForHandshake();
 
             await this.handleTlsConnection();
@@ -136,6 +137,7 @@ class Oasecontrol extends utils.Adapter {
 
             const pwCheck = await this.getOaseClient().checkDevicePwReq(
                 this.config.optDevicePassword,
+                false,
                 TransportType.TLS
             );
 
@@ -146,6 +148,11 @@ class Oasecontrol extends utils.Adapter {
             this.log.info("authenticated to device");
             this.setState("info.connection", { val: true, ack: true });
             this.isConnected = true;
+
+            //start scene poll once
+            await this.sleep(1000);
+            await this.getFmMasterScene()
+
 
             // start keep alive handling
             if (this.enableKeepAlive) {
@@ -162,20 +169,24 @@ class Oasecontrol extends utils.Adapter {
         }
     }
 
+    async getFmMasterScene() {
+        const sceneData = this.getOaseClient().createFmMasterSocketSceneGet();
+        const gls = await this.getOaseClient().getLiveSceneReq(sceneData, TransportType.TLS);
+        if (gls.error != "") {
+            throw new Error(`Invalid poll scene states answer: ${gls.error}`);
+        }
+        const ssg = this.getProtocol().parseSocketSceneGetReply(gls.data);
+        if (ssg.error != "") {
+            throw new Error(`Invalid poll scene socke answer: ${ssg.error}`);
+        }
+        this.updateFmMasterStates(ssg);
+    }
+
     startScenePolling() {
         this.pollingGetScene = setInterval(async () => {
             if (!this.isTxLocked()) {
                 try {
-                    const sceneData = this.getOaseClient().createFmMasterSocketSceneGet();
-                    const gls = await this.getOaseClient().getLiveSceneReq(sceneData, TransportType.TLS);
-                    if (gls.error != "") {
-                        throw new Error(`Invalid poll scene states answer: ${gls.error}`);
-                    }
-                    const ssg = this.getProtocol().parseSocketSceneGetReply(gls.data);
-                    if (ssg.error != "") {
-                        throw new Error(`Invalid poll scene socke answer: ${ssg.error}`);
-                    }
-                    this.updateFmMasterStates(ssg);
+                    await this.getFmMasterScene()
                 } catch (err) {
                     this.txRetries--;
                     this.log.warn(`Polling failed. Retries left: ${this.txRetries}`);
