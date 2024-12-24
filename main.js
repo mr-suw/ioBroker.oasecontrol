@@ -4,12 +4,7 @@
  * Created with @iobroker/create-adapter v2.3.0
  */
 
-// The adapter-core module gives you access to the core ioBroker functions
-// you need to create an adapter
 const utils = require("@iobroker/adapter-core");
-//const { error } = require("console");
-
-// Load your modules here, e.g.:
 const { OaseClient, TransportType, OaseProtocol } = require("./lib/oase");
 const { OaseServer } = require("./lib/oase/protocol"); 
 
@@ -83,7 +78,7 @@ class Oasecontrol extends utils.Adapter {
 
     async scheduleNextDiscovery() {
         const delay = this.calculateNextRetryDelay();
-        this.log.info(`Device not available, next retry in ${Math.floor(delay/1000)} seconds`);
+        this.log.warn(`Device not available, next retry in ${Math.floor(delay/1000)} seconds`);
         this.retryAttempts++;
 
         if (this.discoveryTimer) {
@@ -134,15 +129,10 @@ class Oasecontrol extends utils.Adapter {
 
             this.oaseServer.setClient(this.getOaseClient());
 
-            // Connect UDP client
-            this.log.debug("connecting UDP client...");
-            await this.getOaseClient().connectUdp();
-
-            // Try discovery with retries
+            // discovery with retries
             while (true) {
                 const discovered = await this.tryDiscovery();
                 if (discovered) {
-                    // Continue with existing connection flow
                     const conReq = await this.getOaseClient().tcpConReq(this.tlsPort);
                     if (conReq.error) {
                         throw new Error("TCP connection req failed: " + conReq.error);
@@ -315,17 +305,17 @@ class Oasecontrol extends utils.Adapter {
     }
 
     async initFmMasterEgcStates(){
-        this.log.debug("initializing discovery objects...");
-        await this.createObj("name", "name", "state", "text", "string", false, true);
-        await this.createObj("serial-number", "sn", "state", "text", "string", false, true);
-        await this.createObj("device", "device", "state", "text", "string", false, true);
+        this.log.debug("initializing FM Master EGC states...");
+        if ( await this.getStateAsync("name") == null ) { await this.createObj("name", "name", "state", "text", "string", false, true); }
+        if ( await this.getStateAsync("sn") == null ) {   await this.createObj("serial-number", "sn", "state", "text", "string", false, true); }
+        if ( await this.getStateAsync("device") == null ) {   await this.createObj("device", "device", "state", "text", "string", false, true); }
 
-        this.log.debug("initializing FM Master outlet objects...");
-        await this.createObj("outlet1", "outlet1", "state", "switch", "boolean", true, true);
-        await this.createObj("outlet2", "outlet2", "state", "switch", "boolean", true, true);
-        await this.createObj("outlet3", "outlet3", "state", "switch", "boolean", true, true);
-        await this.createObj("outlet4", "outlet4", "state", "switch", "boolean", true, true);
-        await this.createObj("outlet4_dimmer", "outlet4dim", "state", "value", "number", true, true);
+        //this.log.debug("initializing FM Master outlet objects...");
+        if ( await this.getStateAsync("outlet1") == null ) { await this.createObj("outlet1", "outlet1", "state", "switch", "boolean", true, true); }
+        if ( await this.getStateAsync("outlet2") == null ) { await this.createObj("outlet2", "outlet2", "state", "switch", "boolean", true, true); }
+        if ( await this.getStateAsync("outlet3") == null ) { await this.createObj("outlet3", "outlet3", "state", "switch", "boolean", true, true); }         
+        if ( await this.getStateAsync("outlet4") == null ) { await this.createObj("outlet4", "outlet4", "state", "switch", "boolean", true, true);  }
+        if ( await this.getStateAsync("outlet4dim") == null ) {  await this.createObj("outlet4_dimmer", "outlet4dim", "state", "value", "number", true, true);  }
 
         this.subscribeStatesAsync("outlet1");
         this.subscribeStatesAsync("outlet2");
@@ -333,13 +323,13 @@ class Oasecontrol extends utils.Adapter {
         this.subscribeStatesAsync("outlet4");
         this.subscribeStatesAsync("outlet4_dimmer");
 
-        this.log.debug("creating FM Master read-only switches...");
-        await this.createObj("outlet1_readOnly", "outlet1_readOnly", "state", "switch", "boolean", true, true);
-        await this.createObj("outlet2_readOnly", "outlet2_readOnly", "state", "switch", "boolean", true, true);
-        await this.createObj("outlet3_readOnly", "outlet3_readOnly", "state", "switch", "boolean", true, true);
-        await this.createObj("outlet4_readOnly", "outlet4_readOnly", "state", "switch", "boolean", true, true);
+        //this.log.debug("creating FM Master read-only switches...");
+        if ( await this.getStateAsync("outlet1_readOnly") == null ) { await this.createObj("outlet1_readOnly", "outlet1_readOnly", "state", "switch", "boolean", true, true); }
+        if ( await this.getStateAsync("outlet2_readOnly") == null ) { await this.createObj("outlet2_readOnly", "outlet2_readOnly", "state", "switch", "boolean", true, true); }
+        if ( await this.getStateAsync("outlet3_readOnly") == null ) { await this.createObj("outlet3_readOnly", "outlet3_readOnly", "state", "switch", "boolean", true, true); }
+        if ( await this.getStateAsync("outlet4_readOnly") == null ) { await this.createObj("outlet4_readOnly", "outlet4_readOnly", "state", "switch", "boolean", true, true); }
 
-        this.log.debug("initialize read-only switches...");
+        //this.log.debug("initialize read-only switches...");
         const roValOutlet1 =  await this.getStateAsync(this.name+"."+this.instance+".outlet1_readOnly");
         const roValOutlet2 =  await this.getStateAsync(this.name+"."+this.instance+".outlet2_readOnly");
         const roValOutlet3 =  await this.getStateAsync(this.name+"."+this.instance+".outlet3_readOnly");
@@ -349,23 +339,19 @@ class Oasecontrol extends utils.Adapter {
         if ( roValOutlet3 == null ) {  this.setState(this.name+"."+this.instance+".outlet3_readOnly", false ); }
         if ( roValOutlet4 == null ) {  this.setState(this.name+"."+this.instance+".outlet4_readOnly", false ); }
 
-        this.log.debug("creating FM master switch names...");
-        await this.createObj("outlet1_name", "outlet1_name", "state", "text", "string", true, true);
-        await this.createObj("outlet2_name", "outlet2_name", "state", "text", "string", true, true);
-        await this.createObj("outlet3_name", "outlet3_name", "state", "text", "string", true, true);
-        await this.createObj("outlet4_name", "outlet4_name", "state", "text", "string", true, true);
+        //this.log.debug("creating FM master switch names...");
+        if ( await this.getStateAsync("outlet1_name") == null ) { await this.createObj("outlet1_name", "outlet1_name", "state", "text", "string", true, true); }
+        if ( await this.getStateAsync("outlet2_name") == null ) { await this.createObj("outlet2_name", "outlet2_name", "state", "text", "string", true, true); }
+        if ( await this.getStateAsync("outlet3_name") == null ) { await this.createObj("outlet3_name", "outlet3_name", "state", "text", "string", true, true); }
+        if ( await this.getStateAsync("outlet4_name") == null ) { await this.createObj("outlet4_name", "outlet4_name", "state", "text", "string", true, true); }
 
-        this.log.debug("initialize switch default names...");
-        const nameValOutlet1 =  await this.getStateAsync(this.name+"."+this.instance+".outlet1_name");
-        const nameValOutlet2 =  await this.getStateAsync(this.name+"."+this.instance+".outlet2_name");
-        const nameValOutlet3 =  await this.getStateAsync(this.name+"."+this.instance+".outlet3_name");
-        const nameValOutlet4 =  await this.getStateAsync(this.name+"."+this.instance+".outlet4_name");
-        if ( nameValOutlet1 == null ) {  this.setState(this.name+"."+this.instance+".outlet1_name", "outlet1" ); }
-        if ( nameValOutlet2 == null ) {  this.setState(this.name+"."+this.instance+".outlet2_name", "outlet2" ); }
-        if ( nameValOutlet3 == null ) {  this.setState(this.name+"."+this.instance+".outlet3_name", "outlet3" ); }
-        if ( nameValOutlet4 == null ) {  this.setState(this.name+"."+this.instance+".outlet4_name", "outlet4" ); }
+        //this.log.debug("initialize switch default names...");
+        if ( await this.getStateAsync(this.name+"."+this.instance+".outlet1_name") == null ) {  this.setState(this.name+"."+this.instance+".outlet1_name", "outlet1" ); }
+        if ( await this.getStateAsync(this.name+"."+this.instance+".outlet2_name") == null ) {  this.setState(this.name+"."+this.instance+".outlet2_name", "outlet2" ); }
+        if ( await this.getStateAsync(this.name+"."+this.instance+".outlet3_name") == null ) {  this.setState(this.name+"."+this.instance+".outlet3_name", "outlet3" ); }
+        if ( await this.getStateAsync(this.name+"."+this.instance+".outlet4_name") == null ) {  this.setState(this.name+"."+this.instance+".outlet4_name", "outlet4" ); }
 
-        this.log.debug("adapter objects created.");
+        //this.log.debug("adapter objects created.");
     }
 
 
