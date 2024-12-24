@@ -34,7 +34,6 @@ class Oasecontrol extends utils.Adapter {
         this.pollingKeepAlive = null;
         this.enableKeepAlive = false;
         this.intervalKeepAlive = 30;
-        this.isConnected = false;
         this.tlsPort = 5999;
         this.udpPort = 5959;
         this.isTxLock = false;
@@ -50,6 +49,11 @@ class Oasecontrol extends utils.Adapter {
             throw new Error("OaseClient not initialized");
         }
         return this.oaseClient;
+    }
+
+    async isDeviceConnect() {
+        const sCon = await this.getStateAsync("info.connection");
+        if (sCon != null ){ return sCon.val; } else { return false; }
     }
 
     calculateNextRetryDelay() {
@@ -176,7 +180,6 @@ class Oasecontrol extends utils.Adapter {
 
             this.log.info("authenticated to device");
             this.setState("info.connection", { val: true, ack: true });
-            this.isConnected = true;
 
             //start scene poll once
             await this.sleep(1000);
@@ -442,12 +445,18 @@ class Oasecontrol extends utils.Adapter {
             if ( valReadOnly && valReadOnly.val == true )
             {
                 //state change not allowed; read only protection
-                this.log.info("ignore state change because state " + idName +  " is set to read only");
+                this.log.info("ignoring state change because state " + idName +  " is set to read only");
                 return 0;
             }
             if ( valReadOnly == null )
             {
                 this.log.error(`read only states not available`);
+                return 0;
+            }
+
+            if ( ! await this.isDeviceConnect() ){
+                //device is not connected; discard state change
+                this.log.warn("ignoring state change because device is disconnected.")
                 return 0;
             }
 
