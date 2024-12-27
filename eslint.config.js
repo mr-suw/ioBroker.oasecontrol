@@ -5,6 +5,16 @@ import globals from "globals";
 export default [
     js.configs.recommended,
     {
+        // Ignore configuration
+        ignores: [
+            ".dev-server/**/*",
+            ".dev-server/**/*.js",
+            ".dev-server/**/*.json"
+        ]
+    },
+    {
+        // Main configuration
+        files: ["**/*.js"],
         languageOptions: {
             ecmaVersion: 2020,
             sourceType: "module",
@@ -15,9 +25,6 @@ export default [
                 navigator: "readonly",
                 window: "readonly",
                 __REACT_DEVTOOLS_GLOBAL_HOOK__: "readonly"
-            },
-            parserOptions: {
-                sourceType: "module"
             }
         },
         rules: {
@@ -50,7 +57,7 @@ export default [
             "no-fallthrough": "error"
         },
         linterOptions: {
-            reportUnusedDisableDirectives: true,
-        },
+            reportUnusedDisableDirectives: true
+        }
     }
 ];

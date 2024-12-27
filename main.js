@@ -75,7 +75,7 @@ class Oasecontrol extends utils.Adapter {
                 return true;
             }
             return false;
-        } catch (err) {
+        } catch {
             return false;
         }
     }
@@ -389,7 +389,7 @@ class Oasecontrol extends utils.Adapter {
             if (this.oaseClient) { this.oaseClient.close(); }
 
             callback();
-        } catch (e) {
+        } catch {
             callback();
         }
     }
