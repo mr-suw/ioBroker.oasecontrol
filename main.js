@@ -6,7 +6,7 @@
 
 const utils = require("@iobroker/adapter-core");
 const { OaseClient, TransportType, OaseProtocol } = require("./lib/oase");
-const { OaseServer } = require("./lib/oase/protocol"); 
+const { OaseServer } = require("./lib/oase/protocol");
 
 class Oasecontrol extends utils.Adapter {
 
@@ -14,7 +14,7 @@ class Oasecontrol extends utils.Adapter {
      * @param {Partial<utils.AdapterOptions>} [options={}]
      */
     constructor(options = {}) {
-        super({...options, name: 'oasecontrol'});
+        super({...options, name: "oasecontrol"});
         // Add retry configuration
         this.INITIAL_RETRY_DELAY = 60 * 1000;  // 1 minute
         this.MAX_RETRY_DELAY = 2 * 60 * 60 * 1000;  // 2 hours
@@ -66,7 +66,7 @@ class Oasecontrol extends utils.Adapter {
         try {
             await this.getOaseClient().connectUdp();
             const discovery = await this.getOaseClient().discoveryReq(TransportType.UDP);
-            
+
             if (discovery.lname.startsWith("FM-Master EGC")) {
                 this.log.info("Detected device:" + discovery.lname);
                 this.retryAttempts = 0;
@@ -103,7 +103,7 @@ class Oasecontrol extends utils.Adapter {
     async onReady() {
         try {
             this.checkCfg();
-            
+
             // Set initial states
             this.createObj("info.connection", "info.connection", "state", "indicator", "boolean", false, true);
             this.setState("info.connection", { val: false, ack: true });
@@ -141,7 +141,7 @@ class Oasecontrol extends utils.Adapter {
                     if (conReq.error) {
                         throw new Error("TCP connection req failed: " + conReq.error);
                     }
-                    
+
                     this.log.debug("waiting for TLS handshake from device...");
                     await this.oaseServer.waitForHandshake();
                     await this.handleTlsConnection();
@@ -183,7 +183,7 @@ class Oasecontrol extends utils.Adapter {
 
             //start scene poll once
             await this.sleep(1000);
-            await this.getFmMasterScene()
+            await this.getFmMasterScene();
 
 
             // start keep alive handling
@@ -218,7 +218,7 @@ class Oasecontrol extends utils.Adapter {
         this.pollingGetScene = setInterval(async () => {
             if (!this.isTxLocked()) {
                 try {
-                    await this.getFmMasterScene()
+                    await this.getFmMasterScene();
                 } catch (err) {
                     this.txRetries--;
                     this.log.warn(`Polling failed. Retries left: ${this.txRetries}`);
@@ -244,7 +244,7 @@ class Oasecontrol extends utils.Adapter {
                         this.log.debug("keep-alive successful (sn: " + alive.sn +" )" );
                     }
                 } catch (err) {
-                    console.log("scene polling error: " + err.message );                
+                    console.log("scene polling error: " + err.message );
                 }
             }
         }, this.intervalKeepAlive * 1000);
@@ -261,7 +261,7 @@ class Oasecontrol extends utils.Adapter {
     }
 
     bufferToHexString(buffer) {
-        return Buffer.from(buffer).toString('hex').toUpperCase();
+        return Buffer.from(buffer).toString("hex").toUpperCase();
     }
 
     getProtocol(){
@@ -294,7 +294,7 @@ class Oasecontrol extends utils.Adapter {
 
             //check that keep alive is not send on same time as polling states
             if (this.config.optPollTime % this.intervalKeepAlive === 0) {
-                this.intervalKeepAlive += 7
+                this.intervalKeepAlive += 7;
             }
 
             this.enableKeepAlive = true;
@@ -316,7 +316,7 @@ class Oasecontrol extends utils.Adapter {
         //this.log.debug("initializing FM Master outlet objects...");
         if ( await this.getStateAsync("outlet1") == null ) { await this.createObj("outlet1", "outlet1", "state", "switch", "boolean", true, true); }
         if ( await this.getStateAsync("outlet2") == null ) { await this.createObj("outlet2", "outlet2", "state", "switch", "boolean", true, true); }
-        if ( await this.getStateAsync("outlet3") == null ) { await this.createObj("outlet3", "outlet3", "state", "switch", "boolean", true, true); }         
+        if ( await this.getStateAsync("outlet3") == null ) { await this.createObj("outlet3", "outlet3", "state", "switch", "boolean", true, true); }
         if ( await this.getStateAsync("outlet4") == null ) { await this.createObj("outlet4", "outlet4", "state", "switch", "boolean", true, true);  }
         if ( await this.getStateAsync("outlet4dim") == null ) {  await this.createObj("outlet4_dimmer", "outlet4dim", "state", "value", "number", true, true);  }
 
@@ -456,7 +456,7 @@ class Oasecontrol extends utils.Adapter {
 
             if ( ! await this.isDeviceConnect() ){
                 //device is not connected; discard state change
-                this.log.warn("ignoring state change because device is disconnected.")
+                this.log.warn("ignoring state change because device is disconnected.");
                 return 0;
             }
 
