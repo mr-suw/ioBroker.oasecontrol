@@ -48,7 +48,7 @@ Using GitHub Actions, you can enable automatic releases on npm whenever you push
 Since you installed the release script, you can create a new
 release simply by calling:
 ```bash
-npm run release
+npm run release <version> -- --dry
 ```
 Additional command line options for the release script are explained in the
 [release-script documentation](https://github.com/AlCalzone/release-script#command-line).
@@ -71,9 +71,27 @@ The ioBroker.admin interface will then be available at http://localhost:8081/
 Please refer to the [`dev-server` documentation](https://github.com/ioBroker/dev-server#command-line) for more details.
 
 ## Changelog
-* v0.0.6 upgrade to latest protocol
-* v0.0.5 input error checks
-* v0.0.4 introduce of outlet names
-* v0.0.3 add feature read only outlets
-* v0.0.2 adapter compliance
-* v0.0.1 communication with OASE device working
+<!--
+	Placeholder for the next version (at the beginning of the line):
+    ### **WORK IN PROGRESS**
+-->
+### 0.0.6
+* upgrade to latest protocol
+
+### 0.0.5
+* input error checks
+
+### 0.0.4
+* introduce of outlet names
+
+### 0.0.3
+* add feature read only outlets
+
+### 0.0.2
+* adapter compliance
+
+### 0.0.1
+* communication with OASE device working
+
+## License
+MIT license
