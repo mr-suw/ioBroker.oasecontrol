@@ -10,9 +10,9 @@
   "license": "MIT",
   "keywords": [
     "ioBroker",
-    "template",
     "Smart Home",
-    "home automation"
+    "home automation",
+    "oasecontrol"
   ],
   "repository": {
     "type": "git",
