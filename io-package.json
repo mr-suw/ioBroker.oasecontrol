@@ -4,10 +4,30 @@
     "version": "0.0.6",
     "news": {
       "0.0.6": {
-        "en": "upgrade to latest protocol"
+        "en": "upgrade to latest protocol",
+        "de": "Upgrade auf das neueste Protokoll",
+        "ru": "обновление до последнего протокола",
+        "pt": "atualização para o protocolo mais recente",
+        "nl": "upgrade naar het nieuwste protocol",
+        "fr": "mise à niveau vers le dernier protocole",
+        "it": "aggiornamento all'ultimo protocollo",
+        "es": "actualización al último protocolo",
+        "pl": "aktualizacja do najnowszego protokołu",
+        "uk": "оновлення до останнього протоколу",
+        "zh-cn": "升级到最新协议"
       },
       "0.0.5": {
-        "en": "input error checks"
+        "en": "input error checks",
+        "de": "Eingabefehlerprüfungen",
+        "ru": "проверки ошибок ввода",
+        "pt": "verificações de erro de entrada",
+        "nl": "invoerfoutcontroles",
+        "fr": "vérifications des erreurs de saisie",
+        "it": "controlli degli errori di input",
+        "es": "comprobaciones de errores de entrada",
+        "pl": "kontrole błędów wejściowych",
+        "uk": "перевірки помилок введення",
+        "zh-cn": "输入错误检查"
       },
       "0.0.2": {
         "en": "adapter compliance",
