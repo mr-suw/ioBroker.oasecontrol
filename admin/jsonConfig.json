@@ -5,22 +5,26 @@
         "optIpDevice": {
             "type": "text",
             "label": "IP OASE device",
-            "newLine": true
+            "newLine": true,
+            "md": 6
         },
         "optIpTcpServer": {
             "type": "text",
             "label": "IP TCP server",
-            "newLine": true
+            "newLine": true,
+            "md": 6
         },
         "optDevicePassword": {
             "type": "text",
             "label": "OASE device password",
-            "newLine": true
+            "newLine": true,
+            "lg": 6
         },
         "optPollTime": {
             "type": "number",
             "label": "Polling [s]",
-            "newLine": true
+            "newLine": true,
+            "xs": 6
         }
     }
 }
