@@ -6,25 +6,41 @@
             "type": "text",
             "label": "IP OASE device",
             "newLine": true,
-            "md": 6
+            "xs": 12,
+            "sm": 12,
+            "md": 6,
+            "lg": 4,
+            "xl": 4
         },
         "optIpTcpServer": {
             "type": "text",
             "label": "IP TCP server",
             "newLine": true,
-            "md": 6
+            "xs": 12,
+            "sm": 12,
+            "md": 6,
+            "lg": 4,
+            "xl": 4
         },
         "optDevicePassword": {
             "type": "text",
             "label": "OASE device password",
             "newLine": true,
-            "lg": 6
+            "xs": 12,
+            "sm": 12,
+            "md": 12,
+            "lg": 12,
+            "xl": 12
         },
         "optPollTime": {
             "type": "number",
             "label": "Polling [s]",
             "newLine": true,
-            "xs": 6
+            "xs": 6,
+            "sm": 6,
+            "md": 6,
+            "lg": 2,
+            "xl": 2
         }
     }
 }
