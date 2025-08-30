@@ -2,6 +2,7 @@
   "common": {
     "name": "oasecontrol",
     "version": "0.0.6",
+    "tier": 2,
     "news": {
       "0.0.6": {
         "en": "upgrade to latest protocol",
@@ -52,6 +53,7 @@
         "it": "Versione iniziale",
         "es": "Versión inicial",
         "pl": "Pierwsze wydanie",
+        "uk": "Початковий випуск",
         "zh-cn": "首次出版"
       }
     },
@@ -65,6 +67,7 @@
       "it": "Controllo dell'Oasi",
       "es": "Control OASE",
       "pl": "Kontrola OASE",
+      "uk": "OASE Control",
       "zh-cn": "绿洲控制"
     },
     "desc": {
@@ -77,6 +80,7 @@
       "it": "Controlla i dispositivi esterni di OASE",
       "es": "Controla dispositivos de exterior de OASE",
       "pl": "Steruje urządzeniami zewnętrznymi firmy OASE",
+      "uk": "Керує вуличними пристроями OASE",
       "zh-cn": "控制 OASE 的户外设备"
     },
     "authors": [
@@ -87,9 +91,8 @@
       "OASE",
       "udp"
     ],
-    "license": "MIT",
+    "licenseInformation": "MIT",
     "platform": "Javascript/Node.js",
-    "main": "main.js",
     "icon": "oasecontrol.png",
     "enabled": true,
     "extIcon": "https://raw.githubusercontent.com/mr-suw/ioBroker.oasecontrol/main/admin/oasecontrol.png",
@@ -105,12 +108,12 @@
     },
     "dependencies": [
       {
-        "js-controller": ">=5.0.19"
+        "js-controller": ">=6.0.11"
       }
     ],
     "globalDependencies": [
       {
-        "admin": ">=7.4.10"
+        "admin": ">=7.6.17"
       }
     ]
   },
@@ -120,6 +123,8 @@
     "optDevicePassword": "",
     "optPollTime": 55
   },
+  "protectedNative": [ "optDevicePassword" ],
+  "encryptedNative": [ "optDevicePassword" ],
   "objects": [],
   "instanceObjects": []
 }
