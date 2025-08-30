@@ -41,6 +41,10 @@ clear upsides.
 The template provides you with basic tests for the adapter startup and package files.
 It is recommended that you add your own tests into the mix.
 
+### Update to latest sub-dependencies
+npm update
+npm install
+
 ### Publishing the adapter
 Using GitHub Actions, you can enable automatic releases on npm whenever you push a new git tag that matches the form 
 `v<major>.<minor>.<patch>`. We **strongly recommend** that you do. The necessary steps are described in `.github/workflows/test-and-release.yml`.
@@ -51,6 +55,7 @@ release simply by calling:
 npm run release <bump_version> -- --dry
 ```
 bump_version: "major", "minor", "patch"
+
 Additional command line options for the release script are explained in the
 [release-script documentation](https://github.com/AlCalzone/release-script#command-line).
 
