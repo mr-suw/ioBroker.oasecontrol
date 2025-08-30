@@ -1,9 +1,22 @@
 {
   "common": {
     "name": "oasecontrol",
-    "version": "0.0.6",
+    "version": "0.0.7",
     "tier": 2,
     "news": {
+      "0.0.7": {
+        "en": "restore compliance according to repository checker",
+        "de": "wiederherstellung der compliance gemäß repository checker",
+        "ru": "восстановить соответствие в соответствии с проверкой репозитория",
+        "pt": "restaurar a conformidade de acordo com o verificador de repositório",
+        "nl": "de naleving volgens repository-checker herstellen",
+        "fr": "restaurer la conformité selon le vérificateur du dépôt",
+        "it": "ripristinare la conformità secondo repository checker",
+        "es": "restaurar el cumplimiento de acuerdo con el control de repositorio",
+        "pl": "przywracanie zgodności zgodnie z kontrolerem repozytorium",
+        "uk": "відновлення відповідності відповідно до репозиторійного чекера",
+        "zh-cn": "根据仓库检查器恢复遵守"
+      },
       "0.0.6": {
         "en": "upgrade to latest protocol",
         "de": "Upgrade auf das neueste Protokoll",
@@ -123,8 +136,12 @@
     "optDevicePassword": "",
     "optPollTime": 55
   },
-  "protectedNative": [ "optDevicePassword" ],
-  "encryptedNative": [ "optDevicePassword" ],
+  "protectedNative": [
+    "optDevicePassword"
+  ],
+  "encryptedNative": [
+    "optDevicePassword"
+  ],
   "objects": [],
   "instanceObjects": []
 }
