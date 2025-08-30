@@ -48,8 +48,9 @@ Using GitHub Actions, you can enable automatic releases on npm whenever you push
 Since you installed the release script, you can create a new
 release simply by calling:
 ```bash
-npm run release <version> -- --dry
+npm run release <bump_version> -- --dry
 ```
+bump_version: "major", "minor", "patch"
 Additional command line options for the release script are explained in the
 [release-script documentation](https://github.com/AlCalzone/release-script#command-line).
 
