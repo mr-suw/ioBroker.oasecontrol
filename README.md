@@ -76,9 +76,8 @@ Please refer to the [`dev-server` documentation](https://github.com/ioBroker/dev
 	Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**
 -->
-
 ### **WORK IN PROGRESS**
-* restore compliance to repository checker
+* restore compliance according to repository checker
 
 ### 0.0.6
 * upgrade to latest protocol
