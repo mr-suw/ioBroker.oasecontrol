@@ -104,7 +104,11 @@
       "OASE",
       "udp"
     ],
-    "licenseInformation": "MIT",
+    "licenseInformation": {
+      "license": "MIT",
+      "link": "https://github.com/mr-suw/ioBroker.oasecontrol/blob/main/LICENSE",
+      "type": "free"
+    },
     "platform": "Javascript/Node.js",
     "icon": "oasecontrol.png",
     "enabled": true,
