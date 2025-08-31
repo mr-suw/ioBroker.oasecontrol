@@ -84,26 +84,7 @@ Please refer to the [`dev-server` documentation](https://github.com/ioBroker/dev
 ### 0.0.8
 * NPM release
 
-### 0.0.7
-* restore compliance according to repository checker
-
-### 0.0.6
-* upgrade to latest protocol
-
-### 0.0.5
-* input error checks
-
-### 0.0.4
-* introduce of outlet names
-
-### 0.0.3
-* add feature read only outlets
-
-### 0.0.2
-* adapter compliance
-
-### 0.0.1
-* communication with OASE device working
-
 ## License
 MIT license
+
+Copyright (c) 2025 mrsuw mrsuw@icloud.com
