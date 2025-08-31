@@ -81,6 +81,9 @@ Please refer to the [`dev-server` documentation](https://github.com/ioBroker/dev
 	Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**
 -->
+### **WORK IN PROGRESS**
+* NPM release
+
 ### 0.0.7
 * restore compliance according to repository checker
 
