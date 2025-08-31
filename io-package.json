@@ -1,9 +1,22 @@
 {
   "common": {
     "name": "oasecontrol",
-    "version": "0.0.7",
+    "version": "0.0.8",
     "tier": 2,
     "news": {
+      "0.0.8": {
+        "en": "NPM release",
+        "de": "NPM Release",
+        "ru": "NPM выпустили",
+        "pt": "NPM release",
+        "nl": "NPM release",
+        "fr": "Rejet de NPM",
+        "it": "NPM rilascio",
+        "es": "NPM release",
+        "pl": "Wydanie NPM",
+        "uk": "NPM реліз",
+        "zh-cn": "释放国家预防机制"
+      },
       "0.0.7": {
         "en": "restore compliance according to repository checker",
         "de": "wiederherstellung der compliance gemäß repository checker",
