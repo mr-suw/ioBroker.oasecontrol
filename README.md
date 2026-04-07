@@ -82,6 +82,13 @@ The ioBroker.admin interface will then be available at http://localhost:8081/
 
 Please refer to the [`dev-server` documentation](https://github.com/ioBroker/dev-server#command-line) for more details.
 
+### Switching Node Version under MacOS
+brew install node@22
+brew install nvm
+nvm install 22
+nvm use 22
+node --version   # should show v22.x.x
+
 ## Changelog
 <!--
 	Placeholder for the next version (at the beginning of the line):
