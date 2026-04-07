@@ -4,9 +4,9 @@ updates:
     directory: "/"
     schedule:
       interval: monthly
-      time: "04:00"
+      time: "04:15"
       timezone: Europe/Berlin
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 15
     assignees:
       - mr-suw
     versioning-strategy: increase
@@ -15,8 +15,8 @@ updates:
     directory: "/"
     schedule:
       interval: monthly
-      time: "04:00"
+      time: "04:45"
       timezone: Europe/Berlin
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 15
     assignees:
       - mr-suw
