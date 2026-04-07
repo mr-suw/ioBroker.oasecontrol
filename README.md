@@ -14,10 +14,19 @@ Current supported features:
 - new object elements for making an outlet switch read only
 
 ## Compatibility
-compatibel to FW >= 51.3
+compatibel to OASE FW >= 51.3
 tested with 51.3
 
 make sure to add io.broker MAC address to the broadcast whitelist of your WLAN access point.
+
+## Setup in ioBroker
+**IP OASE device:** static IPv4 address of your OASE device
+
+**IP TCP server:** static IPv4 address of your ioBroker instance
+
+**OASE device password**: that's the tough part; sniff it; it is a crypted string of 74 characters derived from http://app-oasecloud-prod.azurewebsites.net/User/Inventory. Characters \\\u should be replaced by \u
+
+**Polling [s]:** how often in seconds the OASE device should be polled for new data
 
 ### Best Practices
 We've collected some [best practices](https://github.com/ioBroker/ioBroker.repositories#development-and-coding-best-practices) regarding ioBroker development and coding in general. If you're new to ioBroker or Node.js, you should
