@@ -15,6 +15,7 @@ Current supported features:
 
 ## Compatibility
 compatibel to OASE FW >= 51.3
+
 tested with 51.3
 
 make sure to add io.broker MAC address to the broadcast whitelist of your WLAN access point.
