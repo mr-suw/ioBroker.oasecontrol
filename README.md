@@ -3,7 +3,7 @@
 
 ## oasecontrol adapter for ioBroker
 ioBroker.oasecontrol controls outdoor devices from OASE. 
-Supported devices are the FM-Master EGC series.
+Supported devices are the InScenio FM-Master EGC series.
 
 Current devices under test:
 - FM-Master EGC Home with 4 power outlets
