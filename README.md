@@ -3,7 +3,7 @@
 
 ## oasecontrol adapter for ioBroker
 ioBroker.oasecontrol controls outdoor devices from OASE. 
-Supported devices are the FM-Master EGC series. 
+Supported devices are the FM-Master EGC series.
 
 Current devices under test:
 - FM-Master EGC Home with 4 power outlets
@@ -12,6 +12,9 @@ Current supported features:
 - switchable power outlets
 - dimmable power outlet
 - new object elements for making an outlet switch read only
+
+Could also work with
+- [InScenio FM-Master Cloud series](https://www.oase.com/en/products-a-z/family/product/p/70788-inscenio-fm-master-cloud-int.html)
 
 ## Compatibility
 compatibel to OASE FW >= 51.3
@@ -25,7 +28,7 @@ make sure to add io.broker MAC address to the broadcast whitelist of your WLAN a
 
 **IP TCP server:** static IPv4 address of your ioBroker instance
 
-**OASE device password**: that's the tough part; sniff it; it is a crypted string of 74 characters derived from http://app-oasecloud-prod.azurewebsites.net/User/Inventory. Characters \\\u should be replaced by \u
+**OASE device password**: that's the tough part; sniff it during app-login; it is a crypted string of 74 characters derived from http://app-oasecloud-prod.azurewebsites.net/User/Inventory. Characters \\\u should be replaced by \u
 
 **Polling [s]:** how often in seconds the OASE device should be polled for new data
 
