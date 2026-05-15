@@ -112,6 +112,8 @@ node --version   # should show v22.x.x
 ### 0.0.8
 * NPM release
 
+[Older changelogs can be found there](CHANGELOG_OLD.md)
+
 ## License
 MIT license
 
