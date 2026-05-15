@@ -109,6 +109,9 @@ node --version   # should show v22.x.x
 	Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**
 -->
+### **WORK IN PROGRESS**
+- (copilot) Adapter requires node.js >= 22 now
+
 ### 0.0.8
 * NPM release
 
