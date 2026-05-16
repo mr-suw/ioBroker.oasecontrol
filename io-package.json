@@ -1,9 +1,22 @@
 {
   "common": {
     "name": "oasecontrol",
-    "version": "0.0.8",
+    "version": "0.1.0",
     "tier": 2,
     "news": {
+      "0.1.0": {
+        "en": "Adapter requires node.js >= 22 now",
+        "de": "Adapter benötigt node.js >= 22 jetzt",
+        "ru": "Адаптер требует node.js >= 22 сейчас",
+        "pt": "Adaptador requer nod.js >= 22 agora",
+        "nl": "Voor de adapter zijn node.js < 22 nu nodig",
+        "fr": "Adaptateur nécessite node.js >= 22 maintenant",
+        "it": "Adattatore richiede node.js >= 22 ora",
+        "es": "Adaptador requiere node.js ю= 22 ahora",
+        "pl": "Adapter wymaga node.js > = 22",
+        "uk": "Адаптер вимагає node.js >= 22 тепер",
+        "zh-cn": "适配器需要节点.js 现在22"
+      },
       "0.0.8": {
         "en": "NPM release",
         "de": "NPM Release",
