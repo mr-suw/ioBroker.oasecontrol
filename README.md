@@ -32,6 +32,21 @@ make sure to add io.broker MAC address to the broadcast whitelist of your WLAN a
 
 **Polling [s]:** how often in seconds the OASE device should be polled for new data
 
+## Setup Check
+You did successfuly setup this adapter when the log sequence is as follows:
+```
+authenticated to device
+Starting TCP server with TLS...
+Detected device:FM-Master EGC Home
+```
+
+oasecontrol object are present as follows:
+```
+info.connection = true
+...
+serial-number = < device serial number >
+```
+
 ## Changelog
 <!--
 	Placeholder for the next version (at the beginning of the line):
