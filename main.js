@@ -3,12 +3,11 @@
 /*
  * Created with @iobroker/create-adapter v2.3.0
  */
-
-const { Adapter } = require('@iobroker/adapter-core');
+const utils = require('@iobroker/adapter-core');
 const { OaseClient, TransportType, OaseProtocol } = require('./lib/oase');
 const { OaseServer } = require('./lib/oase/protocol');
 
-class Oasecontrol extends Adapter {
+class Oasecontrol extends utils.Adapter {
     constructor(options = {}) {
         super({ ...options, name: 'oasecontrol' });
         // Add retry configuration
@@ -38,6 +37,7 @@ class Oasecontrol extends Adapter {
             itemId: 0x00,
             value: 0x00,
         };
+        this.MAX_POLLING_TIME = 0x7fffffff;
     }
 
     getOaseClient() {
@@ -281,7 +281,10 @@ class Oasecontrol extends Adapter {
         this.log.debug(`Device password: ${this.config.optDevicePassword}`);
         this.log.debug(`Polling time: ${this.config.optPollTime} seconds`);
         if (this.config.optPollTime < 5) {
-            this.log.error(`Polling time below 5 seconds.`);
+            this.log.error(`Polling time below minimum allowed value.`);
+            this.disable();
+        } else if (this.config.optPollTime > this.MAX_POLLING_TIME) {
+            this.log.error(`Polling time exceeds maximum allowed value.`);
             this.disable();
         } else if (this.config.optPollTime > 55) {
             this.log.warn(`Polling time above 55 seconds requires sending a keep alive message to the device.`);
@@ -292,6 +295,8 @@ class Oasecontrol extends Adapter {
             }
 
             this.enableKeepAlive = true;
+        } else {
+            //okay
         }
     }
 
