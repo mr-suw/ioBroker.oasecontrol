@@ -37,7 +37,7 @@ make sure to add io.broker MAC address to the broadcast whitelist of your WLAN a
 	Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**
 -->
-### **WORK IN PROGRESS**
+### 0.1.2 (2026-05-16)
 * Fix deploy issue
 
 ### 0.1.0 (2026-05-16)
