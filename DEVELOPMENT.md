@@ -80,3 +80,8 @@ node --version   # should show v22.x.x
 npm run lint
 npm run lint -- --fix
 ```
+
+### translate
+```bash
+npm run translate
+```

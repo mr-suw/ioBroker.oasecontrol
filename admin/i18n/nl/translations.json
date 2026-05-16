@@ -1,7 +1,7 @@
 {
-    "oasecontrol adapter settings": "Adapter settings for oasecontrol",
-    "optIpDevice": "IP address OASE device",
-    "optIpTcpServer": "IP address TCP server",
-    "optDevicePassword": "OASE device password",
-    "optPollTime": "Status polling interval [s]"
+    "oasecontrol adapter settings": "Adapterinstellingen voor oasecontrol",
+    "optDevicePassword": "OASE-apparaatwachtwoord",
+    "optIpDevice": "IP-adres OASE-apparaat",
+    "optIpTcpServer": "IP-adres TCP-server",
+    "optPollTime": "Status polling-interval [s]"
 }
