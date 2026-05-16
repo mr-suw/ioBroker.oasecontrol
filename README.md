@@ -37,6 +37,9 @@ make sure to add io.broker MAC address to the broadcast whitelist of your WLAN a
 	Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**
 -->
+### **WORK IN PROGRESS**
+* Fix deploy issue
+
 ### 0.1.0 (2026-05-16)
 * Adapter requires node.js >= 22 now
 
