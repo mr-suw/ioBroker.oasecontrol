@@ -46,4 +46,4 @@ make sure to add io.broker MAC address to the broadcast whitelist of your WLAN a
 ## License
 MIT license
 
-Copyright (c) 2025 mrsuw mrsuw@icloud.com
+Copyright (c) 2026 mrsuw mrsuw@icloud.com
