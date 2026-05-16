@@ -85,11 +85,13 @@ class Oasecontrol extends utils.Adapter {
         this.retryAttempts++;
 
         if (this.discoveryTimer) {
-            clearTimeout(this.discoveryTimer);
+            this.clearTimeout(this.discoveryTimer);
+            this.discoveryTimer = null;
         }
 
         return new Promise(resolve => {
-            this.discoveryTimer = setTimeout(async () => {
+            this.discoveryTimer = this.setTimeout(async () => {
+                this.discoveryTimer = null;
                 const success = await this.tryDiscovery();
                 resolve(success);
             }, delay);
@@ -156,7 +158,7 @@ class Oasecontrol extends utils.Adapter {
     }
 
     async sleep(ms) {
-        await new Promise(resolve => setTimeout(resolve, ms));
+        await new Promise(resolve => this.setTimeout(() => resolve(undefined), ms));
     }
 
     async handleTlsConnection() {
@@ -211,7 +213,7 @@ class Oasecontrol extends utils.Adapter {
     }
 
     startScenePolling() {
-        this.pollingGetScene = setInterval(async () => {
+        this.pollingGetScene = this.setInterval(async () => {
             if (!this.isTxLocked()) {
                 try {
                     await this.getFmMasterScene();
@@ -221,7 +223,7 @@ class Oasecontrol extends utils.Adapter {
                     console.log(`scene polling error: ${err}`);
                     if (this.txRetries <= 0) {
                         this.log.error(`Max retries reached. Restarting adapter`);
-                        clearInterval(this.pollingGetScene);
+                        this.clearInterval(this.pollingGetScene);
                         this.restart();
                     }
                 }
@@ -230,7 +232,7 @@ class Oasecontrol extends utils.Adapter {
     }
 
     startKeepAlive() {
-        this.pollingKeepAlive = setInterval(async () => {
+        this.pollingKeepAlive = this.setInterval(async () => {
             if (!this.isTxLocked()) {
                 try {
                     const alive = await this.getOaseClient().aliveReq(TransportType.TLS);
@@ -425,16 +427,17 @@ class Oasecontrol extends utils.Adapter {
      */
     onUnload(callback) {
         try {
-            // Here you must clear all timeouts or intervals that may still be active
-            // clearTimeout(timeout1);
-            // clearTimeout(timeout2);
-            // ...
-            // clearInterval(interval1);
+            // ioBroker wrapper timers are auto-cancelled on unload,
+            // but explicit cleanup is still good practice:
             if (this.pollingGetScene) {
-                clearInterval(this.pollingGetScene);
+                this.clearInterval(this.pollingGetScene);
             }
             if (this.pollingKeepAlive) {
-                clearInterval(this.pollingKeepAlive);
+                this.clearInterval(this.pollingKeepAlive);
+            }
+            if (this.discoveryTimer) {
+                this.clearTimeout(this.discoveryTimer);
+                this.discoveryTimer = null;
             }
             if (this.oaseServer) {
                 this.oaseServer.stop();
