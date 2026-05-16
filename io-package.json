@@ -1,9 +1,22 @@
 {
   "common": {
     "name": "oasecontrol",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "tier": 2,
     "news": {
+      "0.1.1": {
+        "en": "Fix deploy issue",
+        "de": "Problem der Bereitstellung",
+        "ru": "Решение проблемы развертывания",
+        "pt": "Corrigir problema de implantação",
+        "nl": "Fix implementatie probleem",
+        "fr": "Correction du problème de déploiement",
+        "it": "Risolvere il problema di distribuzione",
+        "es": "Cuestiones de despliegue fijo",
+        "pl": "Naprawianie problemu rozmieszczania",
+        "uk": "Виправлення проблеми розгортання",
+        "zh-cn": "解决部署问题"
+      },
       "0.1.0": {
         "en": "Adapter requires node.js >= 22 now",
         "de": "Adapter benötigt node.js >= 22 jetzt",
