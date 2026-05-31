@@ -33,7 +33,7 @@ make sure to add io.broker MAC address to the broadcast whitelist of your WLAN a
 **Polling [s]:** how often in seconds the OASE device should be polled for new data
 
 ## Setup Check
-You did successfuly setup this adapter when the log sequence is as follows:
+You did successfully setup this adapter when the log sequence is as follows:
 ```
 authenticated to device
 Starting TCP server with TLS...
@@ -52,6 +52,9 @@ serial-number = < device serial number >
 	Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**
 -->
+### **WORK IN PROGRESS**
+* Fix errors reported by checker
+
 ### 0.1.3 (2026-05-16)
 * Fix deploy issue
 
