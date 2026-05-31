@@ -117,6 +117,8 @@ class Oasecontrol extends utils.Adapter {
                 port: this.tlsPort,
                 protocol: this.protocol,
                 log: this.log,
+                setTimeout: this.setTimeout.bind(this),
+                clearTimeout: this.clearTimeout.bind(this),
             });
 
             // Start TLS server
@@ -130,6 +132,8 @@ class Oasecontrol extends utils.Adapter {
                 server: this.oaseServer,
                 udpPort: this.udpPort,
                 log: this.log,
+                setTimeout: this.setTimeout.bind(this),
+                clearTimeout: this.clearTimeout.bind(this),
             });
 
             this.oaseServer.setClient(this.getOaseClient());
