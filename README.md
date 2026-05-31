@@ -52,7 +52,7 @@ serial-number = < device serial number >
 	Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**
 -->
-### **WORK IN PROGRESS**
+### 0.1.4 (2026-05-31)
 * Fix errors reported by checker
 
 ### 0.1.3 (2026-05-16)

@@ -1,9 +1,22 @@
 {
   "common": {
     "name": "oasecontrol",
-    "version": "0.1.3",
+    "version": "0.1.4",
     "tier": 2,
     "news": {
+      "0.1.4": {
+        "en": "Fix errors reported by checker",
+        "de": "Fehler beim Checker behoben",
+        "ru": "Исправление ошибок, сообщенных Checker",
+        "pt": "Corrigir erros reportados pelo verificador",
+        "nl": "Fix fouten gemeld door checker",
+        "fr": "Correction des erreurs signalées par le vérificateur",
+        "it": "Risolvi gli errori segnalati da checker",
+        "es": "Corregir errores reportados por el checker",
+        "pl": "Popraw błędy zgłaszane przez checker",
+        "uk": "Виправлення помилок, які повідомляються перевірником",
+        "zh-cn": "校验器报告的错误"
+      },
       "0.1.3": {
         "en": "Fix deploy issue",
         "de": "Problem der Bereitstellung",
