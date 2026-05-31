@@ -4,7 +4,7 @@
     "items": {
         "optIpDevice": {
             "type": "text",
-            "label": "IP OASE device",
+            "label": "optIpDevice",
             "newLine": true,
             "xs": 12,
             "sm": 12,
@@ -14,7 +14,7 @@
         },
         "optIpTcpServer": {
             "type": "text",
-            "label": "IP TCP server",
+            "label": "optIpTcpServer",
             "newLine": true,
             "xs": 12,
             "sm": 12,
@@ -24,7 +24,7 @@
         },
         "optDevicePassword": {
             "type": "text",
-            "label": "OASE device password",
+            "label": "optDevicePassword",
             "newLine": true,
             "xs": 12,
             "sm": 12,
@@ -34,7 +34,7 @@
         },
         "optPollTime": {
             "type": "number",
-            "label": "Polling [s]",
+            "label": "optPollTime",
             "newLine": true,
             "xs": 12,
             "sm": 12,
